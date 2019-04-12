@@ -137,6 +137,7 @@ private:
     void handGuiding();
     void displayMessage(const QString str, int timeout = 0);
     Ui::MainWindow *ui;
+    bool  cBSensorName_add_finished_;
     FTSensorDataProcess *ft_sensor_data_process_;
     RobotControl *robot_control_;
     std::thread* hand_guiding_;

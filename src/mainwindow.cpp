@@ -44,10 +44,13 @@ void MainWindow::deviceInitial()
     else
     {
         flag = ft_sensor_data_process_->openDatabase(sensorType);
+        cBSensorName_add_finished_ = false;
         ui->cBSensorName->addItem("optoforce");
         ui->cBSensorName->addItem("Robotiq");
         ui->cBSensorName->addItem("ATI");
-        int index = (sensorType=="optoforce")?0:(sensorType=="Robotiq")?1:2;
+        ui->cBSensorName->addItem("KunWei");
+        cBSensorName_add_finished_ = true;
+        int index = (sensorType=="optoforce")?0:(sensorType=="Robotiq")?1:(sensorType=="ATI")?2:3;
         ui->cBSensorName->setCurrentIndex(index);
     }
 
@@ -130,7 +133,8 @@ MainWindow::~MainWindow()
 {
     robot_control_->s_thread_handguiding = false;
     usleep(10*1000);
-    hand_guiding_->join();
+    if(hand_guiding_->joinable())
+        hand_guiding_->join();
     if(hand_guiding_ != NULL)
         delete hand_guiding_;
     delete robot_control_;
@@ -252,6 +256,8 @@ void MainWindow::updateUI()
 
 void MainWindow::on_cBSensorName_currentIndexChanged(int index)
 {
+    if(!cBSensorName_add_finished_)
+        return;
     bool flag;
     QString sensorType = ui->cBSensorName->currentText();
     flag = ft_sensor_data_process_->openDatabase("global");
@@ -378,6 +384,8 @@ void MainWindow::updateData()
     ui->lETorqueX->setText(QString::number(data[3]));
     ui->lETorqueY->setText(QString::number(data[4]));
     ui->lETorqueZ->setText(QString::number(data[5]));
+//    std::cout<<"force_of_end_"<<data[0]<<","<<data[1]<<","<<data[2]<<","<<data[3]<<","<<data[4]<<","<<data[5]<<std::endl;
+
     memcpy(data, FTSensorDataProcess::s_sensor_data, sizeof(double)*SENSOR_DIMENSION);
     ui->label_Fx->setText(QString::number(data[0]));
     ui->label_Fy->setText(QString::number(data[1]));
@@ -706,4 +714,3 @@ void MainWindow::displayMessage(const QString str, int timeout)
     ui->statusBar->showMessage(str,timeout);
 //    ui->statusBar->
 }
-

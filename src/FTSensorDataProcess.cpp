@@ -21,6 +21,7 @@ FTSensorDataProcess::FTSensorDataProcess():sensor_data_stable_(false),thread_liv
     sensor_type_.insert(std::pair<std::string, int>("optoforce", SENSOR_TYPE::OPTOFORCE));
     sensor_type_.insert(std::pair<std::string, int>("Robotiq", SENSOR_TYPE::ROBOTIQ));
     sensor_type_.insert(std::pair<std::string, int>("ATI", SENSOR_TYPE::ATI));
+    sensor_type_.insert(std::pair<std::string, int>("KunWei", SENSOR_TYPE::KunWei));
 
     db_ = new DataBase();
     read_sensor_data_ = new std::thread(boost::bind(&FTSensorDataProcess::getFTSensorData, this));
@@ -60,6 +61,10 @@ bool FTSensorDataProcess::sensorTypeSelect(QString sensorType)
     {
          ft_sensor_ = (ATISensor*)&ati;
     }
+    else if(sensor_type_[sensorType.toStdString()] == SENSOR_TYPE::KunWei)
+    {
+         ft_sensor_ = (KunWeiSensor*)&kws;
+    }
 
     sensor_data_stable_ = ft_sensor_->initialFTSensor();
 
@@ -79,7 +84,7 @@ void FTSensorDataProcess::obtainCalibrationPos(int index)
     {
         for(int i = 0; i < 6; i++)
         {
-            calibrationMessurement_[0][i] = s_sensor_data[i];
+            calibrationMessurement_[0][i] = s_sensor_data[i] + s_sensor_offset[i];
         }
         //calibrationMessurement_
     }
@@ -87,7 +92,7 @@ void FTSensorDataProcess::obtainCalibrationPos(int index)
     {
         for(int i = 0; i < 6; i++)
         {
-            calibrationMessurement_[1][i] = s_sensor_data[i];
+            calibrationMessurement_[1][i] = s_sensor_data[i] + s_sensor_offset[i];
         }
         //calibrationMessurement_
     }
@@ -95,7 +100,7 @@ void FTSensorDataProcess::obtainCalibrationPos(int index)
     {
         for(int i = 0; i < 6; i++)
         {
-            calibrationMessurement_[2][i] = s_sensor_data[i];
+            calibrationMessurement_[2][i] = s_sensor_data[i] + s_sensor_offset[i];
         }
     }
     std::cout<<"s_sensor_data"<<s_sensor_data[0]<<","<<s_sensor_data[1]<<","<<s_sensor_data[2]<<","<<s_sensor_data[3]<<","<<s_sensor_data[4]<<","<<s_sensor_data[5]<<std::endl;
@@ -218,7 +223,7 @@ void FTSensorDataProcess::getFTSensorData()
         double ts = (5-sleepT);
         if(ts < 0)
             ts = 0;
-        usleep(ts*1000);
+//        usleep(ts*1000);
     }
 
 }

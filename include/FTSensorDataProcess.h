@@ -14,6 +14,7 @@
 #include "../ftsensor/include/OptoForceSensor.h"
 #include "../ftsensor/include/RobotiqSensor.h"
 #include "../ftsensor/include/ATISensor.h"
+#include "../ftsensor/include/KunWeiSensor.h"
 #include "../utility/include/database.h"
 
 enum PARAMATER_TYPE
@@ -99,7 +100,8 @@ private:
     FTSensor* ft_sensor_;
     OptoForceSensor optoforce;       //optoforce
     RobotiqSensor robotiq;           //robotiq
-    ATISensor ati;           //robotiq
+    ATISensor ati;           //ATI
+    KunWeiSensor kws;           //KWS
 };
 
 #endif // FTSENSORDATAPROCESS_H

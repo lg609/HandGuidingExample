@@ -189,7 +189,7 @@ void RobotControl::startHandGuiding()
 
                     }
 
-                    // std::cout<<"relative_position_"<<relative_position_[0]<<","<<relative_position_[1]<<","<<relative_position_[2];
+//                     std::cout<<"relative_position_"<<relative_position_[0]<<","<<relative_position_[1]<<","<<relative_position_[2];
 
                     if(!calculateTheoreticalWaypoint())
                     {
@@ -211,8 +211,8 @@ void RobotControl::startHandGuiding()
                             last_send_joints_[ks] = wp.jointpos[ks];// the theoretical joint after calman filter;
                         }
                         wayPointVector.push_back(wp);
-                        //                        std::cout<<theoretical_way_point_.jointpos[0]<<","<<theoretical_way_point_.jointpos[1]<<","<<theoretical_way_point_.jointpos[2]<<","<<theoretical_way_point_.jointpos[3]<<","<<theoretical_way_point_.jointpos[4]<<","<<theoretical_way_point_.jointpos[5]<<","<<
-                        //                                                                                          last_send_joints_[0]<<","<<last_send_joints_[1]<<","<<last_send_joints_[2]<<","<<last_send_joints_[3]<<","<<last_send_joints_[4]<<","<<last_send_joints_[5];
+//                        std::cout<<theoretical_way_point_.jointpos[0]<<","<<theoretical_way_point_.jointpos[1]<<","<<theoretical_way_point_.jointpos[2]<<","<<theoretical_way_point_.jointpos[3]<<","<<theoretical_way_point_.jointpos[4]<<","<<theoretical_way_point_.jointpos[5]<<","<<
+//                                                                                                                                                                 last_send_joints_[0]<<","<<last_send_joints_[1]<<","<<last_send_joints_[2]<<","<<last_send_joints_[3]<<","<<last_send_joints_[4]<<","<<last_send_joints_[5];
                         //update the last state
                         for(int i = 0; i < aubo_robot_namespace::ARM_DOF; i++)
                         {
@@ -407,7 +407,7 @@ void RobotControl::setToolProperty()
     m_toolPosition[1] = userCoord.toolDesc.toolInEndPosition.y;
     m_toolPosition[2] = userCoord.toolDesc.toolInEndPosition.z;
 
-    s_tool_pose[5] = -M_PI/2;
+//    s_tool_pose[5] = -M_PI/2;
 
     double ori[4];
     Util::EulerAngleToQuaternion(new double[3]{s_tool_pose[3],s_tool_pose[4],s_tool_pose[5]}, ori);
@@ -591,10 +591,11 @@ bool RobotControl::ObtainCenterofMass()
     base_angle_offset[0] = asin(-l_l[1]/tool_mass);//U
     base_angle_offset[1] = atan(-l_l[0]/l_l[2]);//V
 
-    std::cout<<"center of mass"<<center_mass[0]<<","<<center_mass[1]<<","<<center_mass[2];
-    std::cout<<"tool_gravity"<<tool_mass;
+    std::cout<<"center of mass"<<center_mass[0]<<","<<center_mass[1]<<","<<center_mass[2]<<std::endl;
+    std::cout<<"tool_gravity"<<tool_mass<<std::endl;
     std::cout<<"sensor_offset"<<FTSensorDataProcess::s_sensor_offset[0]<<","<<FTSensorDataProcess::s_sensor_offset[1]<<","<<FTSensorDataProcess::s_sensor_offset[2]
-            <<","<<FTSensorDataProcess::s_sensor_offset[3]<<","<<FTSensorDataProcess::s_sensor_offset[4]<<","<<FTSensorDataProcess::s_sensor_offset[5];
+            <<","<<FTSensorDataProcess::s_sensor_offset[3]<<","<<FTSensorDataProcess::s_sensor_offset[4]<<","<<FTSensorDataProcess::s_sensor_offset[5]<<std::endl;
+//    std::flush;
     return true;
 }
 
@@ -681,6 +682,8 @@ void RobotControl::externalForceOnToolEnd(double current_joints[])
 //    }
 
     memcpy(raw_sensor_data_,  FTSensorDataProcess::s_sensor_data, sizeof(double)*SENSOR_DIMENSION);
+//    memcpy(force_of_end_,  FTSensorDataProcess::s_sensor_data, sizeof(double)*SENSOR_DIMENSION);
+//    return ;
 
     //subtract gravity component(forcr and torque) from sensor data ;
     getGravityOfToolInSensor(current_joints);
@@ -692,7 +695,7 @@ void RobotControl::externalForceOnToolEnd(double current_joints[])
             force_of_end_[i] = raw_sensor_data_[i];
     }
 
-    double toolendtosensor[3] = {0, 0, -0.12};      //sensor in tool coordinate;;same ori;offset z = -0.12
+    double toolendtosensor[3] = {0, 0, -0.135};      //sensor in tool coordinate;;same ori;offset z = -0.12
     force_of_end_[3] = raw_sensor_data_[2]*toolendtosensor[1] - raw_sensor_data_[1]*toolendtosensor[2] + raw_sensor_data_[3];
     force_of_end_[4] = raw_sensor_data_[0]*toolendtosensor[2] - raw_sensor_data_[2]*toolendtosensor[0] + raw_sensor_data_[4];
     force_of_end_[5] = raw_sensor_data_[1]*toolendtosensor[0] - raw_sensor_data_[0]*toolendtosensor[1] + raw_sensor_data_[5];

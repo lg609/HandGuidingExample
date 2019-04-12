@@ -7,7 +7,8 @@ enum SENSOR_TYPE
 {
     OPTOFORCE = 0,
     ROBOTIQ,
-    ATI
+    ATI,
+    KunWei
 };
 
 class FTSensor
