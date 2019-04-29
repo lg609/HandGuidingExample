@@ -84,15 +84,20 @@ void GetJacobian(RMatrix& J, RMatrix& A, RVector q)
     transfer(T56, M_PI / 2, 0, d6, q.value[5]);
 
 
-    for(int i = 0; i < 3; i++)
-    {
-        for(int j = 0; j < 3; j++)
-        {
-            T67.value[i][j] = RobotControl::m_toolOrientation[3*i+j];
-        }
-        T67.value[i][3] = RobotControl::m_toolPosition[i];
-    }
+//    for(int i = 0; i < 3; i++)
+//    {
+//        for(int j = 0; j < 3; j++)
+//        {
+//            T67.value[i][j] = RobotControl::m_toolOrientation[3*i+j];
+//        }
+//        T67.value[i][3] = RobotControl::m_toolPosition[i];
+//    }
+//    T67.value[3][3] = 1;
+    T67.value[0][1] = 1;
+    T67.value[1][0] = -1;
+    T67.value[2][2] = 1;
     T67.value[3][3] = 1;
+
 
     //    R = RMatrix.RotZ(M_PI/4);
     //    T67 << 0, -1, 0, 0,
@@ -121,7 +126,7 @@ void GetJacobian(RMatrix& J, RMatrix& A, RVector q)
     o4 = RMatrix::subRVector(T4,0,2,3,"Column");
     o5 = RMatrix::subRVector(T5,0,2,3,"Column");
     o6 = RMatrix::subRVector(T6,0,2,3,"Column");
-    o7 = RMatrix::subRVector(T6,0,2,3,"Column");
+    o7 = RMatrix::subRVector(T7,0,2,3,"Column");
 
 
 
@@ -156,16 +161,15 @@ void GetJacobian(RMatrix& J, RMatrix& A, RVector q)
 
     RMatrix::catRMatrix(J,3,5,0,5,JJ2);
 
-    RMatrix RT(3,3), R(3,3),S(3,3), B(3,3);
+    RMatrix R(3,3),S(3,3), B(3,3);
     R = RMatrix::subRMatrix(T7,0,2,0,2);
-    RT = RMatrix::RTranspose(R);
     S =  RVector::Skew(o7);
 
-    RMatrix C = B-RT*S;
-    RMatrix::catRMatrix(A,0,2,0,2,RT);
+    RMatrix C = S*R;
+    RMatrix::catRMatrix(A,0,2,0,2,R);
     RMatrix::catRMatrix(A,0,2,3,5,C);
     RMatrix::catRMatrix(A,3,5,0,2,B);
-    RMatrix::catRMatrix(A,3,5,3,5,RT);
+    RMatrix::catRMatrix(A,3,5,3,5,R);
 
 
     //    for(int i = 0; i < 6; i++)

@@ -17,10 +17,10 @@ unix{
     #64bit system
     contains(QT_ARCH, x86_64){
         LIBS += -L$$PWD/lib/lib64/ -lauborobotcontroller
-        LIBS += $$PWD/lib/lib64/libotgLib.a
+#        LIBS += $$PWD/lib/lib64/libotgLib.a
     }
 }
-LIBS += -lmemcached -lpthread
+LIBS += -lpthread -lconfig
 
 include(./ftsensor/ftsensor.pri)
 include(./utility/utility.pri)
@@ -38,4 +38,4 @@ SOURCES += $$PWD/src/main.cpp \
 
 FORMS += mainwindow.ui
 
-
+QT += serialport

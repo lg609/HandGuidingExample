@@ -14,7 +14,7 @@ bool KunWeiSensor::initialFTSensor()
 
     if(serial_port_->open(QIODevice::ReadWrite))
     {
-        serial_port_->setBaudRate(QSerialPort::Baud512000);
+        serial_port_->setBaudRate(QSerialPort::Baud460800);
         serial_port_->setDataBits(QSerialPort::Data8);
         serial_port_->setParity(QSerialPort::NoParity);
         serial_port_->setStopBits(QSerialPort::OneStop);

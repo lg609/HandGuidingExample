@@ -279,8 +279,8 @@ bool Util::getAngleVelocity(const double* ds, double* q, double *dq)
             qq.value[i] = q[i];
         }
         GetJacobian(J, A, qq);
-        RMatrix AJ = A * J;
-        flag = RMatrix::RMatrixInv(AJ, T);
+
+        flag = RMatrix::RMatrixInv(J, T);
 
 //        std::cout<<"1:"<<T.value[0][0]<<","<<T.value[0][1]<<","<<T.value[0][2]<<","<<T.value[0][3]<<","<<T.value[0][4]<<","<<T.value[0][5]<<std::endl;
 //        std::cout<<"2:"<<T.value[1][0]<<","<<T.value[1][1]<<","<<T.value[1][2]<<","<<T.value[1][3]<<","<<T.value[1][4]<<","<<T.value[1][5]<<std::endl;
@@ -293,7 +293,8 @@ bool Util::getAngleVelocity(const double* ds, double* q, double *dq)
 
     if(flag/*!isnan(dDelta.value[0]) && !isnan(dDelta.value[1]) && !isnan(dDelta.value[2]) && !isnan(dDelta.value[3]) && !isnan(dDelta.value[4]) && !isnan(dDelta.value[5])*/)
     {
-      dDelta = T * dDis; //the increment of joint angle
+      RMatrix J_A = T * A;
+      dDelta = J_A * dDis; //the increment of joint angle
       memcpy(dq, dDelta.value, aubo_robot_namespace::ARM_DOF*sizeof(double));
       return true;
     }
