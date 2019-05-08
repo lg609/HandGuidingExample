@@ -84,19 +84,20 @@ void GetJacobian(RMatrix& J, RMatrix& A, RVector q)
     transfer(T56, M_PI / 2, 0, d6, q.value[5]);
 
 
-//    for(int i = 0; i < 3; i++)
-//    {
-//        for(int j = 0; j < 3; j++)
-//        {
-//            T67.value[i][j] = RobotControl::m_toolOrientation[3*i+j];
-//        }
-//        T67.value[i][3] = RobotControl::m_toolPosition[i];
-//    }
-//    T67.value[3][3] = 1;
-    T67.value[0][1] = 1;
-    T67.value[1][0] = -1;
-    T67.value[2][2] = 1;
+    for(int i = 0; i < 3; i++)
+    {
+        for(int j = 0; j < 3; j++)
+        {
+            T67.value[i][j] = RobotControl::m_toolOrientation[3*i+j];
+        }
+        T67.value[i][3] = RobotControl::m_toolPosition[i];
+    }
     T67.value[3][3] = 1;
+
+//    T67.value[0][1] = 1;
+//    T67.value[1][0] = -1;
+//    T67.value[2][2] = 1;
+//    T67.value[3][3] = 1;
 
 
     //    R = RMatrix.RotZ(M_PI/4);
