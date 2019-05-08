@@ -12,7 +12,8 @@ HEADERS += \
     $$PWD/include/mutex.h   \
     $$PWD/include/database.h \
     $$PWD/include/util.h \
-    $$PWD/include/rmatrix.h
+    $$PWD/include/rmatrix.h \
+    $$PWD/include/kinematics.h \
     $$PWD/include/rvector.h
 
 SOURCES += \
@@ -25,4 +26,4 @@ SOURCES += \
     $$PWD/src/util.cpp \
     $$PWD/src/kinematics.cpp\
     $$PWD/src/rmatrix.cpp\
-    $$PWD/src/rvector.cpp\
+    $$PWD/src/rvector.cpp

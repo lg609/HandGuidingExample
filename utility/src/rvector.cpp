@@ -228,6 +228,15 @@ RVector operator* (const RVector &a, const double b)
     return c;
 }
 
+RVector operator* (const double b, RVector &a)
+{
+    RVector c(a.size);
+    for(int i = 0;i< a.size;i++)
+        c.value[i] = a.value[i] * b;
+    return c;
+}
+
+
 RVector operator/ (const RVector &a, const double b)
 {
     RVector c(a.size);
@@ -244,10 +253,3 @@ RVector operator/ (const double b, const RVector &a)
     return c;
 }
 
-RVector operator* (double b, RVector &a)
-{
-    RVector c(a.size);
-    for(int i = 0;i< a.size;i++)
-        c.value[i] = a.value[i] * b;
-    return c;
-}

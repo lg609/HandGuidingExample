@@ -39,8 +39,6 @@ public:
 
     static bool checkForSafe(double j1[], double j2[], int N);
 
-    static bool getAngleVelocity(const double* ds, double* q, double *dq);
-
     static void EulerAngleToQuaternion(double *EulerAngle, double *orientation);
 };
 

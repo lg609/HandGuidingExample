@@ -9,6 +9,7 @@
 #include "../utility/include/util.h"
 #include "../utility/include/rmatrix.h"
 #include "../utility/include/rvector.h"
+#include "../utility/include/kinematics.h"
 
 
 #include <string.h>
@@ -48,9 +49,15 @@ public:
 
 
     bool ObtainCenterofMass();
-    RMatrix toolToBase(double current_joints[]);
+    RMatrix sensorToBase(double current_joints[]);
     void getGravityOfToolInSensor(double current_joints[]);
     void externalForceOnToolEnd(double current_joints[]);
+    void getJacobianofTool(RMatrix& Jtool,RMatrix& A, RVector q, int index);
+    void obtainConstraintForce(RVector q0, RVector& F_constraint);
+    double getPerformanceIndex(RVector q, RMatrix& Jt_inv, RMatrix& Jt_);
+
+    bool getAngleVelocity(double* q);
+    bool getAngleVelocity(const double* ds, double* q, double *dq);
 
     static int s_control_period;
     static bool s_start_handguiding;
@@ -104,6 +111,7 @@ private:
 
 
     bool calculateTheoreticalWaypoint();
+    Kinematics *kine_;
  //ADD
 
 };

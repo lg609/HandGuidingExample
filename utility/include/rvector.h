@@ -19,7 +19,7 @@ public:
     friend RVector operator-(const RVector &a);
     friend RVector operator+(const RVector &a, const RVector &b);
     friend RVector operator*(const RVector &a, const double b);
-    friend RVector operator*(double b, const RVector &a);
+    friend RVector operator*(const double b, const RVector &a);
     friend RVector operator/(const RVector &a, double b);
     friend RVector operator/(double b, const RVector &a);
     //成员函数

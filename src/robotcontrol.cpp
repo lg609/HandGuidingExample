@@ -32,6 +32,7 @@ RobotControl::RobotControl():tcp2canMode_(false)
         joint_max_acc_.jointPara[i] = MAX_ACCELERATION;
         joint_max_velc_.jointPara[i] = MAX_VELOCITY;
     }
+    kine_ = new Kinematics(5);
 }
 
 RobotControl::~RobotControl()
@@ -165,6 +166,7 @@ void RobotControl::startHandGuiding()
                 for(int bufferCount = 1; bufferCount <= addSize; bufferCount++)
                 {
                     externalForceOnToolEnd(last_send_joints_);     //obtain the force of end;
+                    getAngleVelocity(last_send_joints_);
                     //use the model to get the pose increament
                     for(int i = 0; i < aubo_robot_namespace::ARM_DOF; i++)
                     {
@@ -229,7 +231,7 @@ void RobotControl::startHandGuiding()
                         emit signal_handduiding_failed("robot OverSpeed!");
                     }
                 }
-                ret = robotServiceSend.robotServiceSetRobotPosData2Canbus(wayPointVector);    //
+//                ret = robotServiceSend.robotServiceSetRobotPosData2Canbus(wayPointVector);    //
                 //                for(int i = 0; i < wayPointVector.size(); i++)
                 //                    qDebug()<<i<<" "<<wayPointVector[i].jointpos[0]<<","<<wayPointVector[i].jointpos[1]<<","<<wayPointVector[i].jointpos[2]<<","<<wayPointVector[i].jointpos[3]<<","<<wayPointVector[i].jointpos[4]<<","<<wayPointVector[i].jointpos[5];
                 if(ret != aubo_robot_namespace::InterfaceCallSuccCode)
@@ -279,8 +281,7 @@ bool RobotControl::calculateTheoreticalWaypoint()
             ds[1] = 0;
             ds[2] = 0;
         }
-
-        bool flag = Util::getAngleVelocity(ds, last_send_joints_, dq);
+        bool flag = getAngleVelocity(ds, last_send_joints_, dq);
         //bool flag = Util::getAngleVelocity(ds, current_way_point_.jointpos, dq);
 
         if(!flag)
@@ -446,7 +447,7 @@ int RobotControl::enterTcp2CANMode(bool flag)
     }
     return ret;
 }
-
+//ObtainCenterofMass in sensor coordinate
 bool RobotControl::ObtainCenterofMass()
 {
     //obtain pose1,2,3
@@ -544,7 +545,7 @@ bool RobotControl::ObtainCenterofMass()
         }
 
         RMatrix pose_sensortobase(3,3);
-        pose_sensortobase = toolToBase(pose_jointangle1);
+        pose_sensortobase = sensorToBase(pose_jointangle1);
 
         for(int i = 0; i < 3; i++)
         {
@@ -627,7 +628,7 @@ int RobotControl::moveToTargetPose(int index)
 
 
 //input current joints ,G of tool in base;
-//output the Component of gravity and torque in sensor coordinate;
+//output the Component of force and torque in sensor coordinate due to the gravity in sensor coordinate;
 void RobotControl::getGravityOfToolInSensor(double current_joints[])
 {
     RMatrix current_sensortobase(3,3);
@@ -635,7 +636,7 @@ void RobotControl::getGravityOfToolInSensor(double current_joints[])
     RMatrix g_base(3,1);//[0,0,-1]
 
     g_base.value[2][0] = -1;
-    current_sensortobase = toolToBase(current_joints);
+    current_sensortobase = sensorToBase(current_joints);
     g_component = RMatrix::RTranspose(current_sensortobase)*g_base;
     for(int i = 0; i < 3; i++)
     {
@@ -647,7 +648,7 @@ void RobotControl::getGravityOfToolInSensor(double current_joints[])
 }
 
 //input current joints ;output the ori matrix from sensor to base ;in RMatrix form;
-RMatrix RobotControl::toolToBase(double current_joints[])
+RMatrix RobotControl::sensorToBase(double current_joints[])
 {
     aubo_robot_namespace::wayPoint_S current_way_point;
     double current_flangetobase[9] = {0};
@@ -680,7 +681,7 @@ void RobotControl::externalForceOnToolEnd(double current_joints[])
 //    {
 //        current_joints[i] = pose1_jointangle[i]*M_PI/180;//GX GY GZ MGx MGy MGz IN SENSOR
 //    }
-
+//raw_sensor_data_ == the measured sensor data substract the sensor offset;
     memcpy(raw_sensor_data_,  FTSensorDataProcess::s_sensor_data, sizeof(double)*SENSOR_DIMENSION);
 //    memcpy(force_of_end_,  FTSensorDataProcess::s_sensor_data, sizeof(double)*SENSOR_DIMENSION);
 //    return ;
@@ -695,7 +696,7 @@ void RobotControl::externalForceOnToolEnd(double current_joints[])
             force_of_end_[i] = raw_sensor_data_[i];
     }
 
-    double toolendtosensor[3] = {0, 0, -0.135};      //sensor in tool coordinate;;same ori;offset z = -0.12
+    double toolendtosensor[3] = {0, 0, -0.135};      // force acting point;;same ori;offset z = -0.12
     force_of_end_[3] = raw_sensor_data_[2]*toolendtosensor[1] - raw_sensor_data_[1]*toolendtosensor[2] + raw_sensor_data_[3];
     force_of_end_[4] = raw_sensor_data_[0]*toolendtosensor[2] - raw_sensor_data_[2]*toolendtosensor[0] + raw_sensor_data_[4];
     force_of_end_[5] = raw_sensor_data_[1]*toolendtosensor[0] - raw_sensor_data_[0]*toolendtosensor[1] + raw_sensor_data_[5];
@@ -719,3 +720,234 @@ void RobotControl::externalForceOnToolEnd(double current_joints[])
         }
     }
 }
+
+void RobotControl::getJacobianofTool(RMatrix& Jtool,RMatrix& A, RVector q, int index)
+{
+    RMatrix J6(6,6), Jadd(6,6), T6(4,4), JJ2(3,6);//tool in flange T67
+    RVector tool_position(3),zi(3), Jaddi(3), v_zero(3);
+    RMatrix R0_6(3,3);
+
+    kine_->getJacobian(J6, T6, JJ2, q, 0);
+    R0_6 = RMatrix::subRMatrix(T6,0,2,0,2);
+
+    for(int i = 0; i < 3; i++)
+    {
+        tool_position.value[i] = m_toolPosition[i];
+    }
+    for(int i = 0; i < 5; i++)
+    {
+        zi = RMatrix::subRVector(JJ2,0,2,i,"Column");
+        Jaddi = RVector::Skew(zi) * R0_6 * tool_position;
+        RMatrix::catRMatrix(Jadd,0,2,i,Jaddi);
+        RMatrix::catRMatrix(Jadd,3,5,i,v_zero);
+    }
+
+    Jtool = J6 + Jadd;
+
+    //
+
+    RMatrix T0_7(4,4), T_tool(4,4), Rn(3,3), Rn0(3,3), m_zeros(3,3), sk(3,3), C(3,3);
+    RVector on(3);
+    for(int i = 0; i < 3; i++)
+    {
+        for(int j = 0; j < 3; j++)
+        {
+            T_tool.value[i][j] = RobotControl::m_toolOrientation[3*i+j];
+        }
+        T_tool.value[i][3] = RobotControl::m_toolPosition[i];
+    }
+    T_tool.value[3][3] = 1;
+
+    T0_7 = T6*T_tool;
+
+    Rn = RMatrix::subRMatrix(T0_7,0,2,0,2);
+    on = RMatrix::subRVector(T0_7,0,2,3,"Column");
+    sk =  RVector::Skew(on);
+    Rn0 = RMatrix::RTranspose(Rn);
+
+    C = sk*Rn;
+    RMatrix::catRMatrix(A,0,2,0,2,Rn);
+    RMatrix::catRMatrix(A,0,2,3,5,C);
+    RMatrix::catRMatrix(A,3,5,0,2,m_zeros);
+    RMatrix::catRMatrix(A,3,5,3,5,Rn);
+
+    if(index == 1)
+    {
+        RMatrix Trans(6,6), Jn(6,6);
+        RMatrix::catRMatrix(Trans,0,2,0,2,Rn0);
+        RMatrix::catRMatrix(Trans,0,2,3,5,m_zeros);
+        RMatrix::catRMatrix(Trans,3,5,0,2,m_zeros);
+        RMatrix::catRMatrix(Trans,3,5,3,5,Rn0);
+        Jn = Trans*Jtool;
+        Jtool = Jn;
+    }
+}
+
+void RobotControl::obtainConstraintForce(RVector q0, RVector& F_constraint)
+{
+    bool enable_constraints = 1;
+    RMatrix Jt_inv(6,3), Jt_(3,6), Jt_inv_current(6,3);
+    RVector Aq(3), F_v(3);
+    double wth = 0.025, wcr = 0.01, lamda = 100;
+    double kw = 0;
+    double w_q0 = getPerformanceIndex(q0, Jt_inv_current, Jt_);
+    if(w_q0 > wth)
+    {
+        kw = 0;
+    }
+    else
+    {
+        kw = lamda*(1.0/(w_q0 - wcr) + 1.0/(wth - wcr));
+
+        for(int i = 0; i < 3; i++)
+        {
+
+            double v_unit = 1, dt = 0.005, dw = 0;
+            int direct_index = 0;
+            double direct[] = {1.0,-1.0}, dwt[2];
+            for(int j = 0; j < 2; j++)
+            {
+                RVector x_dot(3), q_next(6);
+                x_dot.value[i]= v_unit*direct[j];
+                q_next = q0 + Jt_inv_current * x_dot * dt;
+
+                double w_next = getPerformanceIndex(q_next, Jt_inv, Jt_);
+                if(w_next > w_q0)
+                {
+                    dwt[j] =  w_next - w_q0;
+                }
+                else
+                    dwt[j]=0;
+            }
+            if(dwt[0] > dwt[1])
+            {
+                dw = dwt[0];
+                direct_index = 0;
+            }
+            else
+            {
+                dw = dwt[1];
+                direct_index = 1;
+            }
+            Aq.value[i] = dw*direct[direct_index];
+        }
+    }
+    if (enable_constraints)
+    {
+        F_constraint = Aq * kw  ;
+    }
+    //    for(int i = 0; i <3; i++)
+    //    {
+    //        F_constraint.[i] = F_v.value[i];
+    //    }
+}
+
+double RobotControl::getPerformanceIndex(RVector q, RMatrix& Jt_inv, RMatrix& Jt_)
+{
+    RMatrix Jn(6,6), ones(6,6), A(6,6);
+    RMatrix Jt(3,6), Jt_t(6,3), Jt_norm(3,3);
+    RMatrix Jr(3,6), Jr_inv(6,3);
+    double wqt = 0;
+    getJacobianofTool(Jn, A, q, 1);
+    Jt = RMatrix::subRMatrix(Jn,0,2,0,5);
+    Jr = RMatrix::subRMatrix(Jn,3,5,0,5);
+    //obtain Right inverse of Jr;
+    Jr_inv = kine_->obtainRightInverse(Jr);
+    //
+    Jt_ = Jt * (ones - Jr_inv * Jr);
+    Jt_inv = kine_->obtainRightInverse(Jt_);
+
+    Jt_t = RMatrix::RTranspose(Jt_);
+    Jt_norm = Jt_*Jt_t;
+
+    wqt = RMatrix::normRMatrix(Jt_norm,3);
+
+    return wqt;
+}
+
+bool RobotControl::getAngleVelocity(double* q)
+{
+//    double Md = 2, Cd = 50, Ts = 0.005;
+//    RVector F_constraint(3), x_dot(3), q_prev(6), v_prev(3), q_dot(6), force_end(3);
+//    RMatrix Jt_inv_current(6,3);
+
+//    for(int i = 0; i < 6; i++)
+//    {
+//        q_prev.value[i] = q[i];
+//    }
+//    for(int i = 0; i < 3; i++)
+//    {
+//        force_end.value[i] = force_of_end_[i];
+//    }
+
+//    obtainConstraintForce(q_prev, F_constraint, Jt_inv_current);
+
+//    double T = 1/(Md/Ts + Cd);
+//    x_dot = (v_prev * Md/Ts + force_end + F_constraint) * T;
+
+//    q_dot = Jt_inv_current * x_dot;
+//    //    q_next = q0 + q_dot * dt;
+
+//    v_prev = x_dot;
+
+//    for(int i = 0; i < 6; i++)
+//    {
+//        dq[i] = q_dot.value[i];
+//    }
+    RVector F_constraint(3), q_prev(6);
+
+    for(int i = 0; i < 6; i++)
+    {
+        q_prev.value[i] = q[i];
+    }
+
+    obtainConstraintForce(q_prev, F_constraint);
+
+    for(int i = 0; i < 3; i++)
+    {
+        force_of_end_[i] += F_constraint.value[i];
+    }
+}
+
+bool RobotControl::getAngleVelocity(const double* ds, double* q, double *dq)
+{
+    bool flag;
+    RVector dDis(6), qq(6), dDelta(6);
+    RMatrix J(6,6), A(6,6), T(6,6);
+
+    for(int i = 0; i<1; i++)
+    {
+        for(int i = 0; i < 6; i++)
+        {
+            dDis.value[i] = ds[i];              //the increment in sensor coordinate
+            qq.value[i] = q[i];
+        }
+        getJacobianofTool(J, A, qq, 0);
+
+        flag = RMatrix::RMatrixInv(J, T);
+
+        //        std::cout<<"1:"<<T.value[0][0]<<","<<T.value[0][1]<<","<<T.value[0][2]<<","<<T.value[0][3]<<","<<T.value[0][4]<<","<<T.value[0][5]<<std::endl;
+        //        std::cout<<"2:"<<T.value[1][0]<<","<<T.value[1][1]<<","<<T.value[1][2]<<","<<T.value[1][3]<<","<<T.value[1][4]<<","<<T.value[1][5]<<std::endl;
+        //        std::cout<<"3:"<<T.value[2][0]<<","<<T.value[2][1]<<","<<T.value[2][2]<<","<<T.value[2][3]<<","<<T.value[2][4]<<","<<T.value[2][5]<<std::endl;
+        //        std::cout<<"4:"<<T.value[3][0]<<","<<T.value[3][1]<<","<<T.value[3][2]<<","<<T.value[3][3]<<","<<T.value[3][4]<<","<<T.value[3][5]<<std::endl;
+        //        std::cout<<"5:"<<T.value[4][0]<<","<<T.value[4][1]<<","<<T.value[4][2]<<","<<T.value[4][3]<<","<<T.value[4][4]<<","<<T.value[4][5]<<std::endl;
+        //        std::cout<<"6:"<<T.value[5][0]<<","<<T.value[5][1]<<","<<T.value[5][2]<<","<<T.value[5][3]<<","<<T.value[5][4]<<","<<T.value[5][5]<<std::endl;
+        //        int a = 10;
+    }
+
+    if(flag/*!isnan(dDelta.value[0]) && !isnan(dDelta.value[1]) && !isnan(dDelta.value[2]) && !isnan(dDelta.value[3]) && !isnan(dDelta.value[4]) && !isnan(dDelta.value[5])*/)
+    {
+        RMatrix J_A = T * A;
+        dDelta = J_A * dDis; //the increment of joint angle
+        memcpy(dq, dDelta.value, 6*sizeof(double));
+        return true;
+    }
+    else
+    {
+        dq[0] = 0;dq[1] = 0;dq[2] = 0;dq[3] = 0;dq[4] = 0;dq[5] = 0;
+        return false;
+    }
+}
+
+
+

@@ -20,7 +20,7 @@ unix{
 #        LIBS += $$PWD/lib/lib64/libotgLib.a
     }
 }
-LIBS += -lpthread -lconfig
+LIBS += -lpthread
 
 include(./ftsensor/ftsensor.pri)
 include(./utility/utility.pri)
