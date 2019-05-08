@@ -444,6 +444,7 @@ int RobotControl::enterTcp2CANMode(bool flag)
         //        if(tcp2canMode_)
         ret = robotServiceSend.robotServiceLeaveTcp2CanbusMode();
         s_start_handguiding = false;
+        memset(force_of_end_, 0, sizeof(double)*aubo_robot_namespace::ARM_DOF);
     }
     return ret;
 }
@@ -683,8 +684,6 @@ void RobotControl::externalForceOnToolEnd(double current_joints[])
 //    }
 //raw_sensor_data_ == the measured sensor data substract the sensor offset;
     memcpy(raw_sensor_data_,  FTSensorDataProcess::s_sensor_data, sizeof(double)*SENSOR_DIMENSION);
-//    memcpy(force_of_end_,  FTSensorDataProcess::s_sensor_data, sizeof(double)*SENSOR_DIMENSION);
-//    return ;
 
     //subtract gravity component(forcr and torque) from sensor data ;
     getGravityOfToolInSensor(current_joints);

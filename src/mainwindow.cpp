@@ -344,13 +344,14 @@ void MainWindow::on_pBCalibration_clicked()
         {
             if(robot_control_->ObtainCenterofMass())
             {
+                bool flag;
                 ft_sensor_data_process_->setFTSensorOffsetToDB();
                 double value[6] = {0.0};
-//                ft_sensor_data_process_->insertFTDBData("parameter","toolProperty", value);
-                ft_sensor_data_process_->setFTDBData("parameter","toolProperty", QString::number(RobotControl::tool_mass), 1);
-                ft_sensor_data_process_->setFTDBData("parameter","toolProperty", QString::number(RobotControl::center_mass[0]), 2);
-                ft_sensor_data_process_->setFTDBData("parameter","toolProperty", QString::number(RobotControl::center_mass[1]), 3);
-                ft_sensor_data_process_->setFTDBData("parameter","toolProperty", QString::number(RobotControl::center_mass[2]), 4);
+                flag = ft_sensor_data_process_->insertFTDBData("parameter","toolProperty", value);
+                flag = ft_sensor_data_process_->setFTDBData("parameter","toolProperty", QString::number(RobotControl::tool_mass), 1);
+                flag = ft_sensor_data_process_->setFTDBData("parameter","toolProperty", QString::number(RobotControl::center_mass[0]), 2);
+                flag = ft_sensor_data_process_->setFTDBData("parameter","toolProperty", QString::number(RobotControl::center_mass[1]), 3);
+                flag = ft_sensor_data_process_->setFTDBData("parameter","toolProperty", QString::number(RobotControl::center_mass[2]), 4);
 
                 ui->pBStart->setEnabled(true);
                 FTSensorDataProcess::sensor_data_calibrated_ = true;
