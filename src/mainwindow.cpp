@@ -715,3 +715,23 @@ void MainWindow::displayMessage(const QString str, int timeout)
     ui->statusBar->showMessage(str,timeout);
 //    ui->statusBar->
 }
+
+void MainWindow::on_lE_pos_wcr_textChanged(const QString &arg1)
+{
+    robot_control_->s_pos_wcr = arg1.toDouble();
+}
+
+void MainWindow::on_lE_pos_wth_textChanged(const QString &arg1)
+{
+    robot_control_->s_pos_wth = arg1.toDouble();
+}
+
+void MainWindow::on_lE_pos_lambda_textChanged(const QString &arg1)
+{
+    robot_control_->s_pos_lambda = arg1.toDouble();
+}
+
+void MainWindow::on_rBenable_constraints_clicked()
+{
+     robot_control_->enable_constraints = true;
+}

@@ -9,20 +9,19 @@ class RVector
 {
 public:
     RVector();
-    RVector(int m);
-    RVector(double m[],int n);
+    RVector(size_t m);
+    RVector(double m[], size_t n);
 
     ~RVector(void);
 
-    friend RVector operator*(const RMatrix &A, const RVector &b);
     friend RVector operator-(const RVector &a, const RVector &b);
     friend RVector operator-(const RVector &a);
     friend RVector operator+(const RVector &a, const RVector &b);
     friend RVector operator*(const RVector &a, const double b);
-    friend RVector operator*(const double b, const RVector &a);
+    friend RVector operator*(double b, const RVector &a);
     friend RVector operator/(const RVector &a, double b);
     friend RVector operator/(double b, const RVector &a);
-    //成员函数
+    //
     static double norm(RVector d);
     static RVector vex3(RMatrix A);
     static RMatrix Skew(RVector S);
@@ -36,12 +35,14 @@ public:
     static bool Ori2Quaternion(RMatrix rot, RVector &c);
 
     static RVector sqrtRVector(RVector a);
-    //成员变量
-    int size;
-    bool IsAmpty;
-    //vector<double> value;
+    //
+//    std::vector<double> value;
+    size_t size;
     double value[7];
-    string type;
+//    string type;
+    bool IsAmpty;
+
+
 };
 
 #endif // RVECTOR_H

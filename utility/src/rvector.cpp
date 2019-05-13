@@ -2,19 +2,22 @@
 
 RVector::RVector()
 {
-
+    IsAmpty = true;
 }
 
-RVector::RVector(int m){
+//initialize with 0;
+RVector::RVector(size_t m){
     size = m;
-    for(int i = 0;i< m;i++)
+//    value.resize(size);
+    for(size_t i = 0;i< size;i++)
         value[i] = 0;
 }
 
-
-RVector::RVector(double m[],int n){
+// initialize with the copy of array m[];
+RVector::RVector(double m[], size_t n){
     size = n;
-    for(int i = 0;i< n;i++)
+//    value.resize(size);
+    for(size_t i = 0;i< size;i++)
         value[i] = m[i];
 }
 
@@ -24,7 +27,7 @@ RVector::~RVector(void)
 
 double RVector::norm(RVector d){
     double sum = 0;
-    for(int i = 0;i< d.size;i++)
+    for(size_t i = 0;i< d.size;i++)
         sum += d.value[i]*d.value[i];
     return sqrt(sum);
 }
@@ -66,7 +69,7 @@ RVector RVector::cross3(RVector a, RVector b)
 RVector RVector::catRVector(RVector &a, RVector b)
 {
     RVector c(a.size + b.size);
-    for(int i = 0;i< a.size + b.size;i++)
+    for(size_t i = 0;i< a.size + b.size;i++)
     {
         if (i < a.size)
         {
@@ -83,22 +86,22 @@ RVector RVector::catRVector(RVector &a, RVector b)
 RVector RVector::diagRVector(RMatrix &A)
 {
     RVector c(A.iRow);
-    for(int i = 0;i< A.iRow;i++)
+    for(size_t i = 0;i< A.iRow;i++)
         c.value[i] = A.value[i][i];
     return c;
 }
 
 void RVector::processAngle(RVector &a)
 {
-    for(int i = 0;i<a.size;i++)
+    for(size_t i = 0;i<a.size;i++)
     {
         //[-PI,PI)
         while (a.value[i] >= M_PI) a.value[i] -= 2*M_PI;
         while (a.value[i] < -M_PI) a.value[i] += 2*M_PI;
-        //        if (a.value[i] > JOINT_MAX_POS) a.value[i] = JOINT_MAX_POS;
-        //        if (a.value[i] < -JOINT_MAX_POS) a.value[i] = -JOINT_MAX_POS;
-        //        int n = (int)(a.value[i] / JOINT_MAX_POS);
-        //        a.value[i] = a.value[i] - n * JOINT_MAX_POS;
+        //        if (a.value[i] > JOsize_t_MAX_POS) a.value[i] = JOsize_t_MAX_POS;
+        //        if (a.value[i] < -JOsize_t_MAX_POS) a.value[i] = -JOsize_t_MAX_POS;
+        //        size_t n = (size_t)(a.value[i] / JOsize_t_MAX_POS);
+        //        a.value[i] = a.value[i] - n * JOsize_t_MAX_POS;
     }
 
 }
@@ -106,7 +109,7 @@ void RVector::processAngle(RVector &a)
 double RVector::dotRVector(RVector &a, RVector &b)
 {
     double sum = 0;
-    for(int i = 0;i< a.size;i++)
+    for(size_t i = 0;i< a.size;i++)
         sum += a.value[i] * b.value[i];
     return sum;
 }
@@ -191,7 +194,7 @@ bool RVector::Ori2Quaternion(RMatrix rot, RVector &c)
 RVector RVector::sqrtRVector(RVector a)
 {
     RVector c(a.size);
-    for(int i = 0; i< c.size; i++)
+    for(size_t i = 0; i< c.size; i++)
         c.value[i] = sqrt(a.value[i]);
     return c;
 }
@@ -199,7 +202,7 @@ RVector RVector::sqrtRVector(RVector a)
 RVector operator- (const RVector &a, const RVector &b)
 {
     RVector c(a.size);
-    for(int i = 0;i< a.size;i++)
+    for(size_t i = 0;i< a.size;i++)
         c.value[i] = a.value[i] - b.value[i];
     return c;
 }
@@ -207,7 +210,7 @@ RVector operator- (const RVector &a, const RVector &b)
 RVector operator-(const RVector &a)
 {
     RVector c(a.size);
-    for(int i = 0; i< c.size;i++)
+    for(size_t i = 0; i< c.size;i++)
         c.value[i] = -a.value[i];
     return c;
 }
@@ -215,7 +218,7 @@ RVector operator-(const RVector &a)
 RVector operator+ (const RVector &a, const RVector &b)
 {
     RVector c(a.size);
-    for(int i = 0;i< a.size;i++)
+    for(size_t i = 0;i< a.size;i++)
         c.value[i] = a.value[i] + b.value[i];
     return c;
 }
@@ -223,24 +226,15 @@ RVector operator+ (const RVector &a, const RVector &b)
 RVector operator* (const RVector &a, const double b)
 {
     RVector c(a.size);
-    for(int i = 0;i< a.size;i++)
+    for(size_t i = 0;i< a.size;i++)
         c.value[i] = a.value[i] * b;
     return c;
 }
-
-RVector operator* (const double b, RVector &a)
-{
-    RVector c(a.size);
-    for(int i = 0;i< a.size;i++)
-        c.value[i] = a.value[i] * b;
-    return c;
-}
-
 
 RVector operator/ (const RVector &a, const double b)
 {
     RVector c(a.size);
-    for(int i = 0;i< a.size;i++)
+    for(size_t i = 0;i< a.size;i++)
         c.value[i] = a.value[i] / b;
     return c;
 }
@@ -248,8 +242,15 @@ RVector operator/ (const RVector &a, const double b)
 RVector operator/ (const double b, const RVector &a)
 {
     RVector c(a.size);
-    for(int i = 0;i< a.size;i++)
+    for(size_t i = 0;i< a.size;i++)
         c.value[i] = b / a.value[i];
     return c;
 }
 
+RVector operator* (double b, RVector &a)
+{
+    RVector c(a.size);
+    for(size_t i = 0;i< a.size;i++)
+        c.value[i] = a.value[i] * b;
+    return c;
+}

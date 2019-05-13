@@ -148,6 +148,10 @@ private slots:
     void slot_handduiding_failed(QString str);
     void slot_sensor_overrange(QString str);
 
+    void on_lE_pos_wcr_textChanged(const QString &arg1);
+    void on_lE_pos_wth_textChanged(const QString &arg1);
+    void on_lE_pos_lambda_textChanged(const QString &arg1);
+    void on_rBenable_constraints_clicked();
 };
 
 #endif // MAINWINDOW_H

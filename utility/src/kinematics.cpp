@@ -462,7 +462,7 @@ void Kinematics::getJacobian(RMatrix& J, RMatrix& T6, RMatrix& JJ2, RVector q, i
 RMatrix Kinematics::obtainRightInverse(RMatrix J)
 {
     bool flag;
-    RMatrix J_trans(6,3), Jt(6,6), Jt_inv(6,6), J_inv(6,3);
+    RMatrix J_trans(6,3), Jt(6,6), Jt_inv(3,3), J_inv(6,3);
     J_trans = RMatrix::RTranspose(J);
     Jt = J*J_trans;
     flag = RMatrix::RMatrixInv(Jt ,Jt_inv);

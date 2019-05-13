@@ -11,10 +11,10 @@ class RMatrix
 {
 public:
     RMatrix();
-    RMatrix(int m);
-    RMatrix(const int m, const int n);
+    RMatrix(size_t m);
+    RMatrix(size_t m, size_t n);
     RMatrix(double m[9][9]);
-    RMatrix(double a[4][4],int m,int n);
+    RMatrix(double a[4][4], size_t m);
     RMatrix(double *eerot, double *eetrans);
     ~RMatrix(void);
 
@@ -27,24 +27,26 @@ public:
 
     RMatrix operator*(const RMatrix &other);
 //    RMatrix operator*(const RMatrix &A, const RMatrix &B);
+    friend RVector operator*(const RMatrix &A, const RVector &b);
 
 
 //    static RMatrix RTranspose(RMatrix A);
     static RMatrix RTranspose(const RMatrix other);
     static bool RMatrixInv(RMatrix A, RMatrix &B);
-    static RMatrix subRMatrix(RMatrix A,int m0,int n0,int m1,int n1);
-    static RVector subRVector(RMatrix &A,int m0,int m1,int n,string type);
-    static void catRMatrix(RMatrix &A,int m0,int n0,int m1,int n1,RMatrix &B);
-    static void catRMatrix(RMatrix &A,int m0,int m1,int n0,RVector &b);
-    static void replaceRMatrix(RMatrix &A,int m0,string type,RVector &B);
+    static RMatrix subRMatrix(RMatrix A, size_t m0, size_t n0, size_t m1, size_t n1);
+    static RVector subRVector(RMatrix &A,size_t m0,size_t m1,size_t n,string type);
+    static void catRMatrix(RMatrix &A, size_t m0, size_t n0, size_t m1, size_t n1, RMatrix &B);
+    static void catRMatrix(RMatrix &A, size_t m0, size_t m1, size_t n0, RVector &b);
+    static void replaceRMatrix(RMatrix &A,size_t m0,string type,RVector &B);
 
-    static RMatrix RIdentity(int n);
+    static RMatrix RIdentity(size_t n);
     static void clearRMatrix(RMatrix &A);
 
     static void svdSim(RMatrix &A,RMatrix &U,RMatrix &S,RMatrix &V);
     static void qrFullRMatrix(RMatrix &A,RMatrix &Q);
     static RMatrix triuRMatrix(RMatrix &A);
-    static double normRMatrix(RMatrix &A,int n);
+    static double normRMatrix(RMatrix &A,size_t n);
+    static double detRMatrix(RMatrix A);
 
     static RMatrix Quaternion2RotMatrix(RVector &a);
     static void replaceOriOfTMatrix(RMatrix &A, RMatrix B);
@@ -56,11 +58,11 @@ public:
     static RMatrix RotX(double t);
 
 
-    double value[MATRIX_SIZE][MATRIX_SIZE];
-    int iRow;
-    int iCol;
+        double value[MATRIX_SIZE][MATRIX_SIZE];
+//    std::vector<std::vector<double> > value;
+    size_t iRow;
+    size_t iCol;
     bool IsAmpty;
-    //vector<vector<double> > value;
 };
 
 #endif // RMATRIX_H

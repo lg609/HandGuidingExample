@@ -1,6 +1,7 @@
 #ifndef ROBOTCONTROL_H
 #define ROBOTCONTROL_H
 
+#include <fstream>
 #include <iostream>
 #include "AuboRobotMetaType.h"
 #include "serviceinterface.h"
@@ -19,6 +20,7 @@
 
 
 #define SERVER_HOST "192.168.1.100"
+//#define SERVER_HOST "127.0.0.1"
 #define SERVER_PORT 8899
 #define MAX_ACCELERATION 500.0/180.0*M_PI
 #define MAX_VELOCITY 90.0/180.0*M_PI
@@ -53,8 +55,8 @@ public:
     void getGravityOfToolInSensor(double current_joints[]);
     void externalForceOnToolEnd(double current_joints[]);
     void getJacobianofTool(RMatrix& Jtool,RMatrix& A, RVector q, int index);
-    void obtainConstraintForce(RVector q0, RVector& F_constraint);
-    double getPerformanceIndex(RVector q, RMatrix& Jt_inv, RMatrix& Jt_);
+    void obtainConstraintForce(const RVector q0, RVector& F_constraint);
+    void getPerformanceIndex(const RVector q, RMatrix& Jt_inv, double wq[]);
 
     bool getAngleVelocity(double* q);
     bool getAngleVelocity(const double* ds, double* q, double *dq);
@@ -71,6 +73,16 @@ public:
     static double force_of_end_[CARTESIAN_FREEDOM];
     static double tool_mass;
     static double center_mass[3];
+
+    static double s_pos_wth;
+    static double s_pos_wcr;
+    static double s_pos_lambda;
+
+    static double s_ori_wth;
+    static double s_ori_wcr;
+    static double s_ori_lambda;
+
+    static bool enable_constraints;
 
 signals:
     void signal_handduiding_failed(QString);

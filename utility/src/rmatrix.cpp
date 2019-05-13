@@ -1,17 +1,17 @@
 #include "../include/rmatrix.h"
 #include "../include/rvector.h"
 
-#define rep(i,n) for(int i=1;i<=n;i++) //宏定义for循环，精简代码
-
 RMatrix::RMatrix(void)
 {
     IsAmpty = true;
 }
 
-RMatrix::RMatrix(int m)
+//initialize with unit matrix,same as eye(m) in matlab;
+RMatrix::RMatrix(size_t m)
 {
     iRow = m;
     iCol = m;
+
     if (iRow)
     {
         IsAmpty = false;
@@ -21,24 +21,23 @@ RMatrix::RMatrix(int m)
         IsAmpty = true;
     }
 
-    for(std::size_t i = 0;i < iRow;i++)
-        for(std::size_t j = 0;j < iCol;j++)
+//    value.resize(iRow);
+
+    for(size_t i = 0;i < iRow;i++)
+    {
+//        value[i].resize(iCol);
+        for(size_t j = 0;j < iCol;j++)
         {
             if(i == j)
                 value[i][i] = 1;
             else
                 value[i][j] = 0;
         }
-
-    for(std::size_t i = iRow;i < MATRIX_SIZE;i++)
-        for(std::size_t j = iCol;j < MATRIX_SIZE;j++)
-        {
-            value[i][j] = 0;
-        }
+    }
 }
 
-//一般矩阵初始化size(m,n),zeros
-RMatrix::RMatrix(const int m,const int n)
+//initialize m*n matrix with zero ,same as zeros(m,n) in matlab;
+RMatrix::RMatrix(size_t m, size_t n)
 {
     iRow = m;
     iCol = n;
@@ -51,45 +50,60 @@ RMatrix::RMatrix(const int m,const int n)
         IsAmpty = true;
     }
 
-    for(std::size_t i = 0;i < MATRIX_SIZE;i++)
-        for(std::size_t j = 0;j < MATRIX_SIZE;j++)
-            this->value[i][j] = 0;
-}
-
-// A = B,size(4*4)
-RMatrix::RMatrix(double a[4][4],int m,int n)
-{
-    iRow = m;
-    iCol = n;
-    for(std::size_t i = 0;i < iRow;i++)
-        for(std::size_t j = 0;j < iCol;j++)
-            value[i][j] = a[i][j];
-
-    for(std::size_t i = iRow;i < MATRIX_SIZE;i++)
-        for(std::size_t j = iCol;j < MATRIX_SIZE;j++)
+//    value.resize(iRow);
+    for(size_t i = 0;i < iRow;i++)
+    {
+//        value[i].resize(iCol);
+        for(size_t j = 0;j < iCol;j++)
         {
             value[i][j] = 0;
         }
+    }
 }
-//T = [R,P]
+
+// // initialized with the copy of matrix a[4][4];
+RMatrix::RMatrix(double a[4][4],size_t m)
+{
+    iRow = m;
+    iCol = m;
+//    value.resize(iRow);
+    for(size_t i = 0; i < iRow;i++)
+    {
+//        value[i].resize(iCol);
+        for(size_t j = 0;j < iCol;j++)
+        {
+            value[i][j] = a[i][j];
+        }
+    }
+}
+
+//T = [R,P],
+//input: eerot 9*1;eetrans = 3*1;
 RMatrix::RMatrix(double *eerot, double *eetrans)
 {
     //creat the manipulation transformation matrix
     iRow = 4;
     iCol = 4;
-    for(std::size_t i = 0;i < iRow;i++)
+//    value.resize(iRow);
+    for(size_t i = 0;i < iRow;i++)
     {
-        for(std::size_t j = 0;j < iCol;j++)
-            value[i][j] = eerot[i * 3 + j];
-        value[i][3] = eetrans[i];
-    }
-
-    for(std::size_t i = iRow;i < MATRIX_SIZE;i++)
-        for(std::size_t j = iCol;j < MATRIX_SIZE;j++)
+//        value[i].resize(iCol);
+        if(i < (iRow-1))
         {
-            value[i][j] = 0;
+            for(size_t j = 0;j < iCol-1;j++)
+            {
+                value[i][j] = eerot[i * 3 + j];
+            }
+            value[i][3] = eetrans[i];
         }
+        else
+        {
+            value[i][0] = 0; value[i][1] = 0; value[i][2] = 0;
+            value[3][3] = 1;
+        }
+    }
 }
+
 
 RMatrix::~RMatrix(void)
 {
@@ -100,35 +114,45 @@ RMatrix::RMatrix(const RMatrix &other)
     this->iRow = other.iRow;
     this->iCol = other.iCol;
     this->IsAmpty = other.IsAmpty;
-
-    for (int i = 0; i < MATRIX_SIZE; i++)
-        for (int j = 0; j < MATRIX_SIZE; j++)
+//    value.resize(iRow);
+    for (size_t i = 0; i < iRow; i++)
+    {
+//        value[i].resize(iCol);
+        for (size_t j = 0; j < iCol; j++)
+        {
             this->value[i][j] = other.value[i][j];
+        }
+    }
 }
 
 RMatrix RMatrix::operator=(const RMatrix &other)
 {
-    {
-        this->iRow = other.iRow;
-        this->iCol = other.iCol;
-        this->IsAmpty = other.IsAmpty;
 
-        for (int i = 0; i < MATRIX_SIZE; i++)
-            for (int j = 0; j < MATRIX_SIZE; j++)
-                this->value[i][j] = other.value[i][j];
+    this->iRow = other.iRow;
+    this->iCol = other.iCol;
+    this->IsAmpty = other.IsAmpty;
+
+    for (size_t i = 0; i < iRow; i++)
+    {
+//        value[i].resize(iCol);
+        for (size_t j = 0; j < iCol; j++)
+        {
+            this->value[i][j] = other.value[i][j];
+        }
     }
+
     return *this;
 }
 
 //RMatrix RMatrix::operator*(const RMatrix &A, const RMatrix &B)
 //{
 //    RMatrix C(A.iRow,B.iCol);
-//    for (int i = 0; i < C.iRow; i++)
+//    for (size_t i = 0; i < C.iRow; i++)
 //    {
-//        for (int j = 0; j < C.iCol; j++)
+//        for (size_t j = 0; j < C.iCol; j++)
 //        {
 //            double sum=0;
-//            for (int k = 0; k < A.iCol; k++)
+//            for (size_t k = 0; k < A.iCol; k++)
 //                sum += A.value[i][k]*B.value[k][j];
 //            C.value[i][j] = sum;
 //        }
@@ -139,12 +163,12 @@ RMatrix RMatrix::operator=(const RMatrix &other)
 RMatrix RMatrix::operator*(const RMatrix &other)
 {
     RMatrix C(this->iRow,other.iCol);
-    for (int i = 0; i < this->iRow; i++)
+    for (size_t i = 0; i < this->iRow; i++)
     {
-        for (int j = 0; j < other.iCol; j++)
+        for (size_t j = 0; j < other.iCol; j++)
         {
             double sum=0;
-            for (int k = 0; k < this->iCol; k++)
+            for (size_t k = 0; k < this->iCol; k++)
                 sum += this->value[i][k]*other.value[k][j];
             C.value[i][j] = sum;
         }
@@ -153,10 +177,10 @@ RMatrix RMatrix::operator*(const RMatrix &other)
 }
 
 //eyes(n);
-RMatrix RMatrix::RIdentity(int n)
+RMatrix RMatrix::RIdentity(size_t n)
 {
     RMatrix c(n, n);
-    for (std::size_t i = 0; i < n; i++)
+    for (size_t i = 0; i < n; i++)
         c.value[i][i] = 1;
     return c;
 }
@@ -164,8 +188,8 @@ RMatrix RMatrix::RIdentity(int n)
 //RMatrix RMatrix::RTranspose(const RMatrix &other)
 //{
 //    RMatrix C(other.iCol,other.iCol);
-//    for (int i = 0; i < MATRIX_SIZE; i++)
-//        for (int j = 0; j < MATRIX_SIZE; j++)
+//    for (size_t i = 0; i < MATRIX_SIZE; i++)
+//        for (size_t j = 0; j < MATRIX_SIZE; j++)
 //            C.value[i][j] = other.value[j][i];
 //    return C;
 
@@ -173,23 +197,23 @@ RMatrix RMatrix::RIdentity(int n)
 
 RMatrix RMatrix::RTranspose(const RMatrix A)
 {
-    int m = A.iCol;
-    int n = A.iRow;
+    size_t m = A.iCol;
+    size_t n = A.iRow;
     RMatrix C(m, n);
-    for(std::size_t i=0;i<m;i++)
-        for(std::size_t j=0;j<n;j++)
+    for(size_t i=0;i<m;i++)
+        for(size_t j=0;j<n;j++)
             C.value[i][j] = A.value[j][i];
     return C;
 }
 
 //row mo to m1;column no to n1;
-RMatrix RMatrix::subRMatrix(RMatrix A,int m0,int m1,int n0,int n1)
+RMatrix RMatrix::subRMatrix(RMatrix A,size_t m0,size_t m1,size_t n0,size_t n1)
 {
-    int m = m1 - m0 + 1;
-    int n = n1 - n0 + 1;
+    size_t m = m1 - m0 + 1;
+    size_t n = n1 - n0 + 1;
     RMatrix rm(m, n);
-    for(std::size_t i=0;i<m;i++)
-        for(std::size_t j=0;j<n;j++)
+    for(size_t i=0;i<m;i++)
+        for(size_t j=0;j<n;j++)
             rm.value[i][j] = A.value[m0 + i][n0 + j];
     return rm;
 }
@@ -274,28 +298,28 @@ RMatrix RMatrix::RotX(double t)
     return rx;
 }
 //A = [B,D;C]
-void RMatrix::catRMatrix(RMatrix &A,int m0,int m1,int n0,int n1,RMatrix &B)
+void RMatrix::catRMatrix(RMatrix &A,size_t m0,size_t m1,size_t n0,size_t n1,RMatrix &B)
 {
-    for (std::size_t i = m0;i <= m1;i++)
+    for (size_t i = m0;i <= m1;i++)
     {
-        for (std::size_t j = n0;j <= n1;j++)
+        for (size_t j = n0;j <= n1;j++)
         {
             A.value[i][j] = B.value[i-m0][j-n0];
         }
     }
 }
 
-void RMatrix::catRMatrix(RMatrix &A,int m0,int m1,int n0,RVector &B)
+void RMatrix::catRMatrix(RMatrix &A,size_t m0,size_t m1,size_t n0,RVector &B)
 {
-    for (std::size_t i = m0;i <= m1;i++)
+    for (size_t i = m0;i <= m1;i++)
     {
         A.value[i][n0] = B.value[i];
     }
 }
 
-void RMatrix::replaceRMatrix(RMatrix &A,int m0,string type,RVector &b)
+void RMatrix::replaceRMatrix(RMatrix &A,size_t m0,string type,RVector &b)
 {
-    for (std::size_t i = 0;i < b.size;i++)
+    for (size_t i = 0;i < b.size;i++)
     {
         A.value[i][m0] = b.value[i];
     }
@@ -304,31 +328,31 @@ void RMatrix::replaceRMatrix(RMatrix &A,int m0,string type,RVector &b)
 void RMatrix::replaceOriOfTMatrix(RMatrix &A, RMatrix B)
 {
     //replace the rotation matrix of the homogenous matrix
-    for (std::size_t i = 0;i < 3;i++)
-        for(std::size_t j = 0;j < 3;j++)
+    for (size_t i = 0;i < 3;i++)
+        for(size_t j = 0;j < 3;j++)
             A.value[i][j] = B.value[i][j];
 }
 
 void RMatrix::replaceDisOfTMatrix(RMatrix &A, RVector &b)
 {
     //replace the displacement of the homogenous matrix
-    for (std::size_t i = 0;i < 3;i++)
+    for (size_t i = 0;i < 3;i++)
             A.value[i][3] = b.value[i];
 }
 
 
-RVector RMatrix::subRVector(RMatrix &A,int m0,int m1,int n,string type)
+RVector RMatrix::subRVector(RMatrix &A,size_t m0,size_t m1,size_t n,string type)
 {
-    std::size_t size = m1 - m0 + 1;
+    size_t size = m1 - m0 + 1;
     RVector rm(size);
     if(type == "Column")
     {
-        for(std::size_t i=0;i < size;i++)
+        for(size_t i=0;i < size;i++)
             rm.value[i] = A.value[m0 + i][n];
     }
     else if(type == "Row")
     {
-        for(std::size_t i=0;i < size;i++)
+        for(size_t i=0;i < size;i++)
             rm.value[i] = A.value[n][m0 + i];
     }
     else
@@ -341,35 +365,45 @@ RVector RMatrix::subRVector(RMatrix &A,int m0,int m1,int n,string type)
 RMatrix RMatrix::triuRMatrix(RMatrix &A)
 {
     RMatrix C = A;
-    for(std::size_t i=0;i<C.iRow;i++)
+    for(size_t i=0;i<C.iRow;i++)
         C.value[i][i] = 0;
     return C;
 
 }
 
-double RMatrix::normRMatrix(RMatrix &A,int n)
+double RMatrix::normRMatrix(RMatrix &A,size_t n)
 {
     double res = 0;
-    for(std::size_t i=0;i<A.iCol;i++)
-        for(std::size_t j=0;j<A.iRow;j++)
+    for(size_t i=0;i<A.iCol;i++)
+        for(size_t j=0;j<A.iRow;j++)
             res += A.value[i][j] * A.value[i][j];
     return sqrt(res);
 
 }
 
+double RMatrix::detRMatrix(RMatrix A)
+{
+    //only for 3X3
+    double s;
+    double s1=A.value[0][0]*A.value[1][1]*A.value[2][2]+A.value[0][1]*A.value[1][2]*A.value[2][0]+A.value[0][2]*A.value[1][0]*A.value[2][1];
+    double s2=A.value[0][2]*A.value[1][1]*A.value[2][0]+A.value[0][1]*A.value[1][0]*A.value[2][2]+A.value[0][0]*A.value[1][2]*A.value[2][1];
+    s=s1-s2;
+    return s;
+}
+
 void RMatrix::clearRMatrix(RMatrix &A)
 {
-    for(std::size_t i=0;i<A.iCol;i++)
-        for(std::size_t j=0;j<A.iRow;j++)
+    for(size_t i=0;i<A.iCol;i++)
+        for(size_t j=0;j<A.iRow;j++)
             A.value[i][j] = 0;
 }
 
 void RMatrix::svdSim(RMatrix &A,RMatrix &U,RMatrix &S,RMatrix &V)
 {
     double tol = 1e-13;			//精度控制
-    int loopmax = 300;			//迭代次数
+    size_t loopmax = 300;			//迭代次数
 
-    int loopcount = 0;			//计数器
+    size_t loopcount = 0;			//计数器
     S = RMatrix::RTranspose(A);
 
     double Err =  10000000;  //1.7977e+308
@@ -386,7 +420,7 @@ void RMatrix::svdSim(RMatrix &A,RMatrix &U,RMatrix &S,RMatrix &V)
         RMatrix E = RMatrix::triuRMatrix(S);
         double e = RMatrix::normRMatrix(E,1);
         double f = 0;
-        for (int i = 0;i<S.iRow;i++) f += S.value[i][i] * S.value[i][i];
+        for (size_t i = 0;i<S.iRow;i++) f += S.value[i][i] * S.value[i][i];
         f = sqrt(f);
         if (f == 0) f = 1;
         Err = e / f;
@@ -397,13 +431,13 @@ void RMatrix::svdSim(RMatrix &A,RMatrix &U,RMatrix &S,RMatrix &V)
     RVector SS = RVector::diagRVector(S);			//获得S矩阵的对角元素
     RMatrix::clearRMatrix(S);
     double ssn = 0;
-    for(int i=0;i<SS.size;i++)
+    for(size_t i=0;i<SS.size;i++)
     {
         ssn = SS.value[i];
         S.value[i][i] = fabs(ssn);
         if (ssn < 0)
         {
-            for(int j=0;j<U.iRow;j++)
+            for(size_t j=0;j<U.iRow;j++)
                 U.value[j][i] = -U.value[j][i];
         }
     }
@@ -414,15 +448,15 @@ void RMatrix::qrFullRMatrix(RMatrix &A,RMatrix &Q)
 {
     double a[36];
     double q[36];
-    int m = 6;
-    int n = 6;
-    int i, j, k, l, nn, p, jj;
+    size_t m = 6;
+    size_t n = 6;
+    size_t i, j, k, l, nn, p, jj;
     double u, alpha, w, t;
 
     //转置矩阵的雅克比
-    for (int i = 0;i < A.iCol;i++)
+    for (size_t i = 0;i < A.iCol;i++)
     {
-        for (int j = 0;j < A.iRow;j++)
+        for (size_t j = 0;j < A.iRow;j++)
         {
             a[i*6+j] = A.value[j][i];
         }
@@ -496,17 +530,17 @@ void RMatrix::qrFullRMatrix(RMatrix &A,RMatrix &Q)
                 t = q[p]; q[p] = q[l]; q[l] = t;
             }
 
-        for (int i = 0;i < A.iRow;i++)
+        for (size_t i = 0;i < A.iRow;i++)
         {
-            for (int j = 0;j < A.iCol;j++)
+            for (size_t j = 0;j < A.iCol;j++)
             {
                 A.value[i][j] = a[i*6+j];
             }
         }
 
-        for (int i = 0;i < A.iRow;i++)
+        for (size_t i = 0;i < A.iRow;i++)
         {
-            for (int j = 0;j < A.iCol;j++)
+            for (size_t j = 0;j < A.iCol;j++)
             {
                 Q.value[i][j] = q[i*6+j];
             }
@@ -516,20 +550,20 @@ void RMatrix::qrFullRMatrix(RMatrix &A,RMatrix &Q)
 // 矩阵求逆
 bool RMatrix::RMatrixInv(RMatrix A, RMatrix &Mc)
 {
-    int m = A.iRow;
-    int n = A.iCol;
+    size_t m = A.iRow;
+    size_t n = A.iCol;
     if (m != n)
     {
         return false;
     }
 
     double a[6][6];
-    for (int i = 0;i<m;i++)
-        for (int j = 0;j<n;j++)
+    for (size_t i = 0;i<m;i++)
+        for (size_t j = 0;j<n;j++)
             a[i][j] = A.value[i][j];
     double b[6][6] = {0};
 
-    int i, j, row, k;
+    size_t i, j, row, k;
     double max, temp;
 
     //单位矩阵
@@ -603,12 +637,12 @@ bool RMatrix::RMatrixInv(RMatrix A, RMatrix &Mc)
 //RMatrix operator*(const RMatrix &A,const RMatrix &B) //
 //{
 //    RMatrix C(A.iRow,B.iCol);
-//    for (int i = 0; i < C.iRow; i++)
+//    for (size_t i = 0; i < C.iRow; i++)
 //    {
-//        for (int j = 0; j < C.iCol; j++)
+//        for (size_t j = 0; j < C.iCol; j++)
 //        {
 //            double sum=0;
-//            for (int k = 0; k < A.iCol; k++)
+//            for (size_t k = 0; k < A.iCol; k++)
 //                sum += A.value[i][k]*B.value[k][j];
 //            C.value[i][j] = sum;
 //        }
@@ -622,41 +656,41 @@ RVector operator* (const RMatrix &A,const RVector &b) //乘法定义
     {
 
     }
-    RVector c(b.size);
+    RVector c(A.iRow);
     //RVector c(b.size);
-    for (int i = 0; i < A.iCol; i++)
-        for (int j = 0; j < A.iRow; j++)
+    for (size_t i = 0; i < A.iRow; i++)
+        for (size_t j = 0; j < A.iCol; j++)
             c.value[i] += A.value[i][j]*b.value[j];
     return c;
 }
 
 
 RMatrix operator+ (const RMatrix &A,const RMatrix &B) {
-    int m = A.iRow;
-    int n = A.iCol;
+    size_t m = A.iRow;
+    size_t n = A.iCol;
     RMatrix C(m, n);
-    for (int i = 0; i < m; i++)
-        for (int j = 0; j <n; j++)
+    for (size_t i = 0; i < m; i++)
+        for (size_t j = 0; j <n; j++)
             C.value[i][j] = A.value[i][j] + B.value[i][j];
     return C;
 }
 
 //RMatrix operator- (RMatrix &A,RMatrix &B) {
-//    int m = A.iRow;
-//    int n = A.iCol;
+//    size_t m = A.iRow;
+//    size_t n = A.iCol;
 //    RMatrix C(m, n);
-//    for (int i = 0; i < m; i++)
-//        for (int j = 0; j <n; j++)
+//    for (size_t i = 0; i < m; i++)
+//        for (size_t j = 0; j <n; j++)
 //            C.value[i][j] = A.value[i][j] - B.value[i][j];
 //    return C;
 //}
 
 RMatrix operator- (const RMatrix &A, const RMatrix &B) {
-    int m = A.iRow;
-    int n = A.iCol;
+    size_t m = A.iRow;
+    size_t n = A.iCol;
     RMatrix C(m, n);
-    for (int i = 0; i < m; i++)
-        for (int j = 0; j <n; j++)
+    for (size_t i = 0; i < m; i++)
+        for (size_t j = 0; j <n; j++)
             C.value[i][j] = A.value[i][j] - B.value[i][j];
     return C;
 }
