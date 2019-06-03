@@ -29,7 +29,13 @@ enum PARAMATER_TYPE
 enum CONTROL_MODE
 {
     VELOCITY = 0,
-    ACCLERATION
+    ACCLERATION,
+};
+
+enum CONTROL_SPACE
+{
+    JOINTSPACE = 0,
+    OPERATIONSPACE
 };
 
 enum CALCULATE_METHOD
@@ -86,6 +92,8 @@ public:
     static double s_stiffness[SENSOR_DIMENSION];
     //static double s_threshold[SENSOR_DIMENSION];
     static double s_pos[6];
+
+    static int s_controlSpace;
 
     static double s_sensor_data[SENSOR_DIMENSION];
     static double s_sensor_offset[SENSOR_DIMENSION];

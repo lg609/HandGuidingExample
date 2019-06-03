@@ -145,7 +145,7 @@ MainWindow::~MainWindow()
 void MainWindow::updateUI()
 {
     bool flag;
-    QString dragMode, calculateMethod, controlModel, controlPeriod, bufferSizeLimit, filter1, filter2;
+    QString dragMode, calculateMethod, controlModel, controlSpace, controlPeriod, bufferSizeLimit, filter1, filter2;
     flag = ft_sensor_data_process_->getFTDBData("base", "dragMode", dragMode);
     if(dragMode == "position")
     {
@@ -185,6 +185,18 @@ void MainWindow::updateUI()
     {
         ui->rBAcceleration->setChecked(true);
         FTSensorDataProcess::s_controlModel = 1;
+    }
+
+    flag = ft_sensor_data_process_->getFTDBData("base", "controlSpace", controlSpace);
+    if(controlSpace == "jointSpace")
+    {
+        ui->rBJointSpace->setChecked(true);
+        FTSensorDataProcess::s_controlSpace = 0;
+    }
+    else
+    {
+        ui->rBOperateSpace->setChecked(true);
+        FTSensorDataProcess::s_controlSpace = 1;
     }
 
     flag = ft_sensor_data_process_->getFTDBData("base", "controlPeriod", controlPeriod);
@@ -436,6 +448,18 @@ void MainWindow::on_rBAcceleration_clicked()
 {
     ft_sensor_data_process_->setFTDBData("base", "controlModel", "acceleration");
     FTSensorDataProcess::s_controlModel = 1;
+}
+
+void MainWindow::on_rBJointSpace_clicked()
+{
+    ft_sensor_data_process_->setFTDBData("base", "controlSpace", "jointSpace");
+    FTSensorDataProcess::s_controlSpace = 0;
+}
+
+void MainWindow::on_rBOperateSpace_clicked()
+{
+    ft_sensor_data_process_->setFTDBData("base", "controlSpace", "operateSpace");
+    FTSensorDataProcess::s_controlSpace = 1;
 }
 
 void MainWindow::on_hSFilter1_valueChanged(int value)
@@ -718,12 +742,12 @@ void MainWindow::displayMessage(const QString str, int timeout)
 
 void MainWindow::on_lE_pos_wcr_textChanged(const QString &arg1)
 {
-    robot_control_->s_pos_wcr = arg1.toDouble();
+   robot_control_->s_pos_wcr = arg1.toDouble();
 }
 
 void MainWindow::on_lE_pos_wth_textChanged(const QString &arg1)
 {
-    robot_control_->s_pos_wth = arg1.toDouble();
+  robot_control_->s_pos_wth = arg1.toDouble();
 }
 
 void MainWindow::on_lE_pos_lambda_textChanged(const QString &arg1)
@@ -733,5 +757,9 @@ void MainWindow::on_lE_pos_lambda_textChanged(const QString &arg1)
 
 void MainWindow::on_rBenable_constraints_clicked()
 {
-     robot_control_->enable_constraints = true;
+    robot_control_->enable_constraints = true;
 }
+
+
+
+

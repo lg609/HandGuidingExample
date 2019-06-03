@@ -1,4 +1,5 @@
 #include "robotcontrol.h"
+using namespace Eigen;
 
 int RobotControl::s_control_period = 5;//unit s
 bool RobotControl::s_start_handguiding = false;
@@ -13,13 +14,13 @@ double RobotControl::force_of_end_[CARTESIAN_FREEDOM] = {0};
 double RobotControl::tool_mass = 0.0;
 double RobotControl::center_mass[3] = {0};
 
-double RobotControl::s_pos_wth = 0.025;
-double RobotControl::s_pos_wcr = 0.01;
-double RobotControl::s_pos_lambda = 100;
+double RobotControl::s_pos_wth = 0.02;
+double RobotControl::s_pos_wcr = 0.005;
+double RobotControl::s_pos_lambda = 10;
 
-double RobotControl::s_ori_wth = 0.025;
-double RobotControl::s_ori_wcr = 0.015;
-double RobotControl::s_ori_lambda = 100;
+double RobotControl::s_ori_wth = 0.03;
+double RobotControl::s_ori_wcr = 0.005;
+double RobotControl::s_ori_lambda = 10;
 
 bool RobotControl::enable_constraints = false;
 
@@ -29,7 +30,7 @@ static RobotControl *s_instance = 0;
 
 double pose1_jointangle[6] = {-15,15,75,60,80,0};
 double pose2_jointangle[6] = {-36,27,95,-27,0,0};
-double pose3_jointangle[6] = {-36,21,100,-6,90,0};
+double pose3_jointangle[6] = {-36,0,90,0,90,0};
 
 RobotControl *RobotControl::instance()
 {
@@ -157,6 +158,11 @@ void RobotControl::startHandGuiding()
         current_velocities_[i] = 0.0;
         last_velocities_[i] = 0.0;
         relative_position_[i] = 0.0;
+
+        current_joint_dd_[i] = 0;
+        current_joint_d_[i] = 0;
+        last_joint_d_[i] = 0;
+        last_joint_dd_[i] = 0;
     }
     s_accumulate_time = 0.0;
 
@@ -183,39 +189,62 @@ void RobotControl::startHandGuiding()
                     if (enable_constraints)
                     {
                         getAngleVelocity(last_send_joints_);
+                        int a;
+                        if(std::isnan(force_of_end_[0]) || std::isnan(force_of_end_[1]) || std::isnan(force_of_end_[2]) || std::isnan(force_of_end_[3]))
+                           a = 0;
+
                     }
                     //use the model to get the pose increament
                     for(int i = 0; i < aubo_robot_namespace::ARM_DOF; i++)
                     {
                         //First-order lag filtering
                         average_sensor_data_[i] = force_of_end_[i] * 0.4 + average_sensor_data_[i] * 0.6;
+                    }
 
-                        if(FTSensorDataProcess::s_controlModel == CONTROL_MODE::ACCLERATION)
+
+                    if(FTSensorDataProcess::s_controlSpace == CONTROL_SPACE::JOINTSPACE)
+                    {
+                        double jointTorque[6];
+                        jointControl(last_send_joints_, average_sensor_data_, jointTorque);
+                        for(int i = 0; i < aubo_robot_namespace::ARM_DOF; i++)
                         {
-                            current_acclerations_[i] = 1.0/FTSensorDataProcess::s_sensitivity[i] * (average_sensor_data_[i] - FTSensorDataProcess::s_damp[i] * last_velocities_[i] - FTSensorDataProcess::s_stiffness[i] * relative_position_[i]);   //a = k*force   Newton
-                            current_velocities_[i] = last_velocities_[i] +  s_control_period * (current_acclerations_[i] + last_acclerations_[i]) / 2000.0;
+                        current_joint_dd_[i] = 1.0/FTSensorDataProcess::s_sensitivity[i] * (jointTorque[i] - FTSensorDataProcess::s_damp[i] * current_joint_d_[i] - FTSensorDataProcess::s_stiffness[i] * last_send_joints_[i]);   //a = k*force   Newton
+                        current_joint_d_[i] = last_joint_d_[i] +  s_control_period * (current_joint_dd_[i] + last_joint_dd_[i]) / 2000.0;
+                        theoretical_way_point_.jointpos[i] = last_send_joints_[i] +  s_control_period * (current_joint_d_[i] + last_joint_d_[i]) / 2000.0;
                         }
-                        else
-                            //                            current_velocities_[i] = FTSensorDataProcess::s_sensitivity[i] * average_sensor_data_[i];
-                            current_velocities_[i] = (average_sensor_data_[i] + CONTROL_CYCLE * FTSensorDataProcess::s_sensitivity[i] * last_velocities_[i]) / (FTSensorDataProcess::s_sensitivity[i] * CONTROL_CYCLE + FTSensorDataProcess::s_damp[i]);
                     }
-                    std::cout<<"current_velocities_  "<<current_velocities_[0]<<";"<<current_velocities_[1]<<";"<<current_velocities_[2]<<";"<<current_velocities_[3]<<";"<<current_velocities_[4]<<";"<<current_velocities_[5]<<";"<<std::endl;
-
-                    for(int i = 0; i < 3; i++)
+                    else
                     {
-                        relative_pose_.relativePosition[i] = s_control_period * (last_velocities_[i] + current_velocities_[i]) / 2000.0;
-                        relative_axis_angles_[i] = s_control_period * (last_velocities_[i+3] + current_velocities_[i+3]) / 2000.0;
-                        relative_position_[i] += relative_pose_.relativePosition[i];
-                        relative_position_[i+3] += relative_axis_angles_[i];
+                        for(int i = 0; i < aubo_robot_namespace::ARM_DOF; i++)
+                        {
 
-                    }
+                            if(FTSensorDataProcess::s_controlModel == CONTROL_MODE::ACCLERATION)
+                            {
+                                current_acclerations_[i] = 1.0/FTSensorDataProcess::s_sensitivity[i] * (average_sensor_data_[i] - FTSensorDataProcess::s_damp[i] * last_velocities_[i] - FTSensorDataProcess::s_stiffness[i] * relative_position_[i]);   //a = k*force   Newton
+                                current_velocities_[i] = last_velocities_[i] +  s_control_period * (current_acclerations_[i] + last_acclerations_[i]) / 2000.0;
+                            }
+                            else
+                                //                            current_velocities_[i] = FTSensorDataProcess::s_sensitivity[i] * average_sensor_data_[i];
+                                current_velocities_[i] = (average_sensor_data_[i] + CONTROL_CYCLE * FTSensorDataProcess::s_sensitivity[i] * last_velocities_[i]) / (FTSensorDataProcess::s_sensitivity[i] * CONTROL_CYCLE + FTSensorDataProcess::s_damp[i]);
+                        }
+                        std::cout<<"current_velocities_  "<<current_velocities_[0]<<";"<<current_velocities_[1]<<";"<<current_velocities_[2]<<";"<<current_velocities_[3]<<";"<<current_velocities_[4]<<";"<<current_velocities_[5]<<";"<<std::endl;
 
-                    //                     std::cout<<"relative_position_"<<relative_position_[0]<<","<<relative_position_[1]<<","<<relative_position_[2];
+                        for(int i = 0; i < 3; i++)
+                        {
+                            relative_pose_.relativePosition[i] = s_control_period * (last_velocities_[i] + current_velocities_[i]) / 2000.0;
+                            relative_axis_angles_[i] = s_control_period * (last_velocities_[i+3] + current_velocities_[i+3]) / 2000.0;
+                            relative_position_[i] += relative_pose_.relativePosition[i];
+                            relative_position_[i+3] += relative_axis_angles_[i];
 
-                    if(!calculateTheoreticalWaypoint())
-                    {
-                        std::cout<<"calculation error!";
-                        emit signal_handduiding_failed("calculation error!");
+                        }
+
+                        //                     std::cout<<"relative_position_"<<relative_position_[0]<<","<<relative_position_[1]<<","<<relative_position_[2];
+
+                        if(!calculateTheoreticalWaypoint())
+                        {
+                            std::cout<<"calculation error!";
+                            emit signal_handduiding_failed("calculation error!");
+                        }
                     }
                     if(Util::checkForSafe(theoretical_way_point_.jointpos, last_send_joints_, aubo_robot_namespace::ARM_DOF))
                     {
@@ -739,7 +768,7 @@ void RobotControl::externalForceOnToolEnd(double current_joints[])
     }
 }
 //verified;
-void RobotControl::getJacobianofTool(RMatrix& Jtool,RMatrix& A, RVector q, int index)
+void RobotControl::getJacobianofTool(RMatrix& Jtool,RMatrix& A, const RVector q, int index)
 {
     RMatrix J6(6,6), Jadd(6,6), T6(4,4), JJ2(3,6);//tool in flange T67
     RVector tool_position(3),zi(3), Jaddi(3), v_zero(3);
@@ -805,7 +834,7 @@ void RobotControl::obtainConstraintForce(const RVector q0, RVector& F_constraint
 {
     RMatrix J_inv(6,3), J_inv_current(6,3);
     double wq_0[2] = {0}, wq_next[2] = {0};
-    double kw = 0;
+    double kw[2] = {0};
 
     getPerformanceIndex(q0, J_inv_current, wq_0);
     std::cout<<"wqt_0  "<<wq_0[0]<<";   "<<"wqr_0  "<<wq_0[1]<<std::endl;
@@ -830,11 +859,11 @@ void RobotControl::obtainConstraintForce(const RVector q0, RVector& F_constraint
         }
         if(wq_0[k] > s_wth)
         {
-            kw = 0;
+            kw[k] = 0;
         }
         else
         {
-            kw = s_lambda * (1.0/(wq_0[k] - s_wcr) - 1.0/(s_wth - s_wcr));
+            kw[k] = s_lambda * (1.0/(wq_0[k] - s_wcr) - 1.0/(s_wth - s_wcr));
 
             for(int i = 0; i < 3; i++)
             {
@@ -867,7 +896,7 @@ void RobotControl::obtainConstraintForce(const RVector q0, RVector& F_constraint
                 }
                 if (enable_constraints)
                 {
-                    F_constraint.value[2*k + i] = dw * direct[direct_index] * kw;
+                    F_constraint.value[2*k + i] = dw * direct[direct_index] * kw[k];
                 }
             }
         }
@@ -881,7 +910,7 @@ void RobotControl::getPerformanceIndex(const RVector q, RMatrix& J_inv, double w
     RMatrix Jn(6,6), ones(6), A(6,6);
     RMatrix Jt(3,6), Jt_t(6,3), Jt_norm(3,3);
     RMatrix Jr(3,6), Jr_inv(6,3);
-    double wqt = 0;
+    double wqt = 0, wqr = 0;
     getJacobianofTool(Jn, A, q, 1);
     Jt = RMatrix::subRMatrix(Jn,0,2,0,5);
     Jr = RMatrix::subRMatrix(Jn,3,5,0,5);
@@ -891,19 +920,41 @@ void RobotControl::getPerformanceIndex(const RVector q, RMatrix& J_inv, double w
     RMatrix Jt_ = Jt * (ones - Jr_inv * Jr);
     Jt_t = RMatrix::RTranspose(Jt_);
     Jt_norm = Jt_*Jt_t;
-    wqt = sqrt(RMatrix::detRMatrix(Jt_norm));
+
+//    wqt = sqrt(RMatrix::detRMatrix(Jt_norm));
+
+    RMatrix Ut(3,3), Vt(3,3), St(3,3);
+    RMatrix::svdSim(Jt_norm, Ut, St, Vt);
+
 
     RMatrix Jt_inv = kine_->obtainRightInverse(Jt);
     RMatrix Jr_ = Jr * (ones - Jt_inv * Jt);
     RMatrix Jr_t = RMatrix::RTranspose(Jr_);
     RMatrix Jr_norm = Jr_*Jr_t;
-    double wqr = sqrt(RMatrix::detRMatrix(Jr_norm));
-    wq[0] = wqt;
-    wq[1] = wqr;
+//    wqr = sqrt(RMatrix::detRMatrix(Jr_norm));
+
+    RMatrix Ur(3,3), Vr(3,3), Sr(3,3);
+    RMatrix::svdSim(Jr_norm, Ur, Sr, Vr);
+
+
+//    double sst[3] = {0}, ssr[3] = {0};
+//    wqt = St.value[0][0];
+//    wqr = Sr.value[0][0];
+//    for(int i = 0; i < 3; i++)
+//    {
+//        sst[i] = St.value[i][i];
+//        ssr[i] = Sr.value[i][i];
+
+//        if(sst[i] < wqt)
+//            wqt = sst[i];
+//        if(ssr[i] < wqr)
+//            wqr = ssr[i];
+//    }
+    wq[0] = St.value[2][2];
+    wq[1] = Sr.value[2][2];
 
     RMatrix::catRMatrix(J_inv,0,5,0,2,Jt_inv);
     RMatrix::catRMatrix(J_inv,0,5,3,5,Jr_inv);
-
 }
 
 bool RobotControl::getAngleVelocity(double* q)
@@ -992,9 +1043,29 @@ bool RobotControl::getAngleVelocity(const double* ds, double* q, double *dq)
         dq[0] = 0;dq[1] = 0;dq[2] = 0;dq[3] = 0;dq[4] = 0;dq[5] = 0;
         return false;
     }
-
-
 }
+
+void RobotControl::jointControl(double currentJointAngle[], double forceofEnd[], double jointTorque[])
+{
+    RVector qq(6), vjointTorque(6), forceofEndinEnd(6);
+    RMatrix J(6,6), A(6,6), Jt(6,6);
+
+    for(int i = 0; i < 6; i++)
+    {
+        qq.value[i] = currentJointAngle[i];
+        forceofEndinEnd.value[i] = forceofEnd[i];
+    }
+    getJacobianofTool(J, A, qq, 1);
+    Jt = RMatrix::RTranspose(J);
+    vjointTorque = Jt*forceofEndinEnd;
+    for(int i = 0; i < 6; i++)
+    {
+        jointTorque[i] = vjointTorque.value[i];
+    }      
+}
+
+
+
 
 
 

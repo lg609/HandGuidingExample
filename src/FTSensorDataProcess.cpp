@@ -3,6 +3,8 @@
 int FTSensorDataProcess::s_dragMode = 0;
 int FTSensorDataProcess::s_calculateMethod = 0;
 int FTSensorDataProcess::s_controlModel = 0;
+int FTSensorDataProcess::s_controlSpace = 0;
+
 int FTSensorDataProcess::s_bufferSizeLimit = 42;
 int FTSensorDataProcess::s_filter1 = 0;
 int FTSensorDataProcess::s_filter2 = 0;

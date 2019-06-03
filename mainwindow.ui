@@ -459,7 +459,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>360</y>
+      <y>270</y>
       <width>141</width>
       <height>91</height>
      </rect>
@@ -511,7 +511,7 @@ border-color:black;
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>220</y>
+      <y>180</y>
       <width>141</width>
       <height>91</height>
      </rect>
@@ -1270,7 +1270,7 @@ border-color:grey;
      </rect>
     </property>
     <property name="text">
-     <string>0.01</string>
+     <string>0.005</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="lE_pos_wth">
@@ -1283,7 +1283,7 @@ border-color:grey;
      </rect>
     </property>
     <property name="text">
-     <string>0.025</string>
+     <string>0.03</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="lE_pos_lambda">
@@ -1296,7 +1296,7 @@ border-color:grey;
      </rect>
     </property>
     <property name="text">
-     <string>100</string>
+     <string>10</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="lE_ori_wcr">
@@ -1309,7 +1309,7 @@ border-color:grey;
      </rect>
     </property>
     <property name="text">
-     <string>0.01</string>
+     <string>0.005</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="lE_ori_wth">
@@ -1322,7 +1322,7 @@ border-color:grey;
      </rect>
     </property>
     <property name="text">
-     <string>0.025</string>
+     <string>0.03</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="lE_ori_lambda">
@@ -1335,7 +1335,7 @@ border-color:grey;
      </rect>
     </property>
     <property name="text">
-     <string>100</string>
+     <string>10</string>
     </property>
    </widget>
    <widget class="QRadioButton" name="rBenable_constraints">
@@ -1350,6 +1350,53 @@ border-color:grey;
     <property name="text">
      <string>enable_constraints</string>
     </property>
+   </widget>
+   <widget class="QGroupBox" name="gBCalculateMethod_2">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>370</y>
+      <width>141</width>
+      <height>91</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QGroupBox{
+border-width:3px;
+border-style:solid;
+border-color:white;
+margin-top:0.1ex;
+}</string>
+    </property>
+    <property name="title">
+     <string>Control Space</string>
+    </property>
+    <widget class="QRadioButton" name="rBJointSpace">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>30</y>
+       <width>117</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Joint</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="rBOperateSpace">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>60</y>
+       <width>117</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Operate</string>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">

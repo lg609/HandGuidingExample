@@ -4,7 +4,7 @@
 #include "AuboRobotMetaType.h"
 #include "serviceinterface.h"
 
-#define SAFETY_COEFFICIENT  0.0157
+#define SAFETY_COEFFICIENT  0.157
 
 class Util
 {

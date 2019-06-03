@@ -7,6 +7,9 @@
 #include "serviceinterface.h"
 #include "FTSensorDataProcess.h"
 
+#include <iostream>
+#include <Eigen/Dense>
+
 #include "../utility/include/util.h"
 #include "../utility/include/rmatrix.h"
 #include "../utility/include/rvector.h"
@@ -19,8 +22,8 @@
 
 
 
-#define SERVER_HOST "192.168.1.100"
-//#define SERVER_HOST "127.0.0.1"
+//#define SERVER_HOST "192.168.0.100"
+#define SERVER_HOST "127.0.0.1"
 #define SERVER_PORT 8899
 #define MAX_ACCELERATION 500.0/180.0*M_PI
 #define MAX_VELOCITY 90.0/180.0*M_PI
@@ -54,9 +57,10 @@ public:
     RMatrix sensorToBase(double current_joints[]);
     void getGravityOfToolInSensor(double current_joints[]);
     void externalForceOnToolEnd(double current_joints[]);
-    void getJacobianofTool(RMatrix& Jtool,RMatrix& A, RVector q, int index);
+    void getJacobianofTool(RMatrix& Jtool, RMatrix& A, const RVector q, int index);
     void obtainConstraintForce(const RVector q0, RVector& F_constraint);
     void getPerformanceIndex(const RVector q, RMatrix& Jt_inv, double wq[]);
+    void jointControl(double currentJointAngle[], double forceofEnd[], double jointTorque[]);
 
     bool getAngleVelocity(double* q);
     bool getAngleVelocity(const double* ds, double* q, double *dq);
@@ -101,6 +105,12 @@ private:
     double last_velocities_[CARTESIAN_FREEDOM];
     double current_acclerations_[CARTESIAN_FREEDOM];
     double current_velocities_[CARTESIAN_FREEDOM];
+
+
+    double current_joint_dd_[CARTESIAN_FREEDOM];
+    double current_joint_d_[CARTESIAN_FREEDOM];
+    double last_joint_d_[CARTESIAN_FREEDOM];
+    double last_joint_dd_[CARTESIAN_FREEDOM];
 
     double gravity_component[CARTESIAN_FREEDOM];
 

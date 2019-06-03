@@ -151,7 +151,10 @@ private slots:
     void on_lE_pos_wcr_textChanged(const QString &arg1);
     void on_lE_pos_wth_textChanged(const QString &arg1);
     void on_lE_pos_lambda_textChanged(const QString &arg1);
+
     void on_rBenable_constraints_clicked();
+    void on_rBJointSpace_clicked();
+    void on_rBOperateSpace_clicked();
 };
 
 #endif // MAINWINDOW_H

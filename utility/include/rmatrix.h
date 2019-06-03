@@ -42,8 +42,8 @@ public:
     static RMatrix RIdentity(size_t n);
     static void clearRMatrix(RMatrix &A);
 
-    static void svdSim(RMatrix &A,RMatrix &U,RMatrix &S,RMatrix &V);
-    static void qrFullRMatrix(RMatrix &A,RMatrix &Q);
+    static void svdSim(RMatrix A, RMatrix &U, RMatrix &S, RMatrix &V);
+    static bool qrFullRMatrix(const RMatrix A, RMatrix &Q, RMatrix &R);
     static RMatrix triuRMatrix(RMatrix &A);
     static double normRMatrix(RMatrix &A,size_t n);
     static double detRMatrix(RMatrix A);
