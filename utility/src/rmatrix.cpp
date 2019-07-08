@@ -313,7 +313,7 @@ void RMatrix::catRMatrix(RMatrix &A,size_t m0,size_t m1,size_t n0,RVector &B)
 {
     for (size_t i = m0;i <= m1;i++)
     {
-        A.value[i][n0] = B.value[i];
+        A.value[i][n0] = B.value[i-m0];
     }
 }
 

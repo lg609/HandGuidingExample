@@ -191,7 +191,7 @@ void RobotControl::startHandGuiding()
                         getAngleVelocity(last_send_joints_);
                         int a;
                         if(std::isnan(force_of_end_[0]) || std::isnan(force_of_end_[1]) || std::isnan(force_of_end_[2]) || std::isnan(force_of_end_[3]))
-                           a = 0;
+                           break;
 
                     }
                     //use the model to get the pose increament
@@ -820,13 +820,12 @@ void RobotControl::getJacobianofTool(RMatrix& Jtool,RMatrix& A, const RVector q,
 
     if(index == 1)
     {
-        RMatrix Trans(6,6), Jn(6,6);
+        RMatrix Trans(6,6);
         RMatrix::catRMatrix(Trans,0,2,0,2,Rn0);
         RMatrix::catRMatrix(Trans,0,2,3,5,m_zeros);
         RMatrix::catRMatrix(Trans,3,5,0,2,m_zeros);
         RMatrix::catRMatrix(Trans,3,5,3,5,Rn0);
-        Jn = Trans*Jtool;
-        Jtool = Jn;
+        Jtool = Trans*Jtool;
     }
 }
 
