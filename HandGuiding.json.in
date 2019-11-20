@@ -1,0 +1,10 @@
+{
+    \"Name\" : \"$$TP_PLUGIN_NAME\",
+    \"Version\" : \"$$TP_VERSION\",
+    \"CompatVersion\" : \"$$TP_COMPAT_VERSION\",
+    \"Copyright\" : \"(C) 2018 AUBO (Beijing) Robotics Technology Co., Ltd.\",
+    \"Category\" : \"Extensions/Peripheral\",
+    \"Description\" : \"Plugin template example\",
+    \"Url\" : \"http://aubo-robotics.cn\",
+    $$dependencyList
+}

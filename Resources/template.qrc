@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/Translations">
+        <file>Translations/en_GB_template_plugin.qm</file>
+        <file>Translations/zh_CN_template_plugin.qm</file>
+        <file>Translations/zh_TW_template_plugin.qm</file>
+    </qresource>
+    <qresource prefix="/Database"/>
+</RCC>
